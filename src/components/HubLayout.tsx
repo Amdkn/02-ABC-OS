@@ -10,6 +10,10 @@ interface HubLayoutProps {
   children: React.ReactNode;
   tabs: [string, string | null][];
   searchPlaceholder: string;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
+  activeTab?: number;
+  onTabChange?: (idx: number) => void;
 }
 
 export const HubLayout: React.FC<HubLayoutProps> = ({
@@ -17,10 +21,29 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   children,
   tabs,
   searchPlaceholder,
+  searchQuery,
+  onSearchChange,
+  activeTab: controlledActiveTab,
+  onTabChange,
 }) => {
   const H = HUB_CONFIG[hubKey];
-  const [activeTab, setActiveTab] = useState(0);
+  const [localActiveTab, setLocalActiveTab] = useState(0);
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [data] = useState(INITIAL_DATA);
+
+  const isTabControlled = controlledActiveTab !== undefined;
+  const activeTab = isTabControlled ? controlledActiveTab : localActiveTab;
+  const setActiveTab = (idx: number) => {
+    if (onTabChange) onTabChange(idx);
+    if (!isTabControlled) setLocalActiveTab(idx);
+  };
+
+  const isSearchControlled = searchQuery !== undefined;
+  const currentSearchQuery = isSearchControlled ? searchQuery : localSearchQuery;
+  const handleSearchChange = (val: string) => {
+    if (onSearchChange) onSearchChange(val);
+    if (!isSearchControlled) setLocalSearchQuery(val);
+  };
 
   return (
     <div className="min-h-screen w-full relative bg-[var(--bg-2)]">
@@ -100,6 +123,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
             <input
               type="text"
               placeholder={`${searchPlaceholder}…`}
+              value={currentSearchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="bg-transparent border-none outline-none w-full text-[var(--ink)] placeholder:text-[var(--ink-faint)]"
             />
           </div>
