@@ -404,20 +404,22 @@ export default function DashboardPage() {
             {/* PREVIEW DOCK (Simulateur / Sandbox controls) */}
             <div className="fixed bottom-6 right-6 z-50 flex gap-3 bg-[var(--bg-dark)]/90 backdrop-blur-md p-3 border border-[var(--line)] rounded-xl shadow-2xl items-center text-white">
               <span className="text-[10px] uppercase font-bold text-[var(--primary)] tracking-wider px-2">Preview Settings</span>
-              <button 
-                onClick={() => setIsThemeDark(!isThemeDark)} 
+              <button
+                onClick={() => setIsThemeDark(!isThemeDark)}
                 className="bg-[var(--card)] hover:bg-neutral-700/50 p-2 rounded-lg text-sm border border-[var(--line)] transition-colors flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-[18px]">{isThemeDark ? 'light_mode' : 'dark_mode'}</span>
                 {isThemeDark ? 'Clair' : 'Sombre'}
               </button>
-              <Link
-                href="/sandbox"
-                className="bg-[var(--primary)] hover:bg-[var(--primary-deep)] text-[#1f1a17] font-bold px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5"
-              >
-                <span className="material-symbols-outlined text-[18px]">smartphone</span>
-                Sandbox (iOS Shell)
-              </Link>
+              {process.env.NODE_ENV !== 'production' && (
+                <Link
+                  href="/sandbox"
+                  className="bg-[var(--primary)] hover:bg-[var(--primary-deep)] text-[#1f1a17] font-bold px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[18px]">smartphone</span>
+                  Sandbox (iOS Shell)
+                </Link>
+              )}
             </div>
 
           </div>

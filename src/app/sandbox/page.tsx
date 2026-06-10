@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { INITIAL_DATA, HUB_CONFIG } from '@/data/mockData';
 import { HubCard } from '@/components/HubCard';
 import { ActionCard } from '@/components/ActionCard';
@@ -11,6 +12,11 @@ import { Avatar } from '@/components/Avatar';
 import { ControlDock, DeviceMode, ThemeMode, AppState } from '@/components/ControlDock';
 
 export default function SandboxPage() {
+  // /sandbox is a dev-only demo wrapper (iOS phone frame). In production, return 404.
+  if (process.env.NODE_ENV === 'production') {
+    notFound();
+  }
+
   const [device, setDevice] = useState<DeviceMode>('mobile');
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [appState, setAppState] = useState<AppState>('ready');
