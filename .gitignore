@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the template, which is the source-of-truth for which keys the app expects.
+# Real values never live in this file (Test Key Pragma, ADR-ABCOS-001 D7).
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +42,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
