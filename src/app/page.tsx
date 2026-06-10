@@ -154,7 +154,7 @@ export default function DashboardPage() {
               <span className="material-symbols-outlined">school</span>
               Learn
             </Link>
-            <Link href="/build" className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold">
+            <Link href="/build-hub" className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold">
               <span className="material-symbols-outlined">construction</span>
               Build
             </Link>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 <Link href="/learn" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">
                   <span className="material-symbols-outlined text-[25px]">school</span>Learn
                 </Link>
-                <Link href="/build" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">
+                <Link href="/build-hub" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">
                   <span className="material-symbols-outlined text-[25px]">construction</span>Build
                 </Link>
                 <Link href="/brand" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">

@@ -3,7 +3,7 @@ import { AppData } from '@/types';
 export const HUB_CONFIG = {
   community: { c: 'var(--community)', ico: 'groups', label: "L'ASSEMBLÉE", name: 'Community', href: '/community' },
   learn: { c: 'var(--learn-green)', ico: 'school', label: 'CULTIVER LE SAVOIR', name: 'Learn', href: '/learn' },
-  build: { c: 'var(--build-blue)', ico: 'construction', label: 'BÂTIR ENSEMBLE', name: 'Build', href: '/build' },
+  build: { c: 'var(--build-blue)', ico: 'construction', label: 'BÂTIR ENSEMBLE', name: 'Build', href: '/build-hub' },
   brand: { c: 'var(--brand-gold)', ico: 'verified', label: 'VOTRE IDENTITÉ COLLECTIVE', name: 'Brand', href: '/brand' },
 };
 

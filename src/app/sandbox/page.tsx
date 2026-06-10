@@ -390,7 +390,7 @@ export default function SandboxPage() {
               <nav className="nav" aria-label="Navigation principale">
                 <Link href="/community" className="tap"><span className="material-symbols-outlined">groups</span>Community</Link>
                 <Link href="/learn" className="tap"><span className="material-symbols-outlined">school</span>Learn</Link>
-                <Link href="/build" className="tap"><span className="material-symbols-outlined">construction</span>Build</Link>
+                <Link href="/build-hub" className="tap"><span className="material-symbols-outlined">construction</span>Build</Link>
                 <Link href="/brand" className="tap"><span className="material-symbols-outlined">verified</span>Brand</Link>
               </nav>
             </div>
@@ -413,7 +413,7 @@ export default function SandboxPage() {
               <a className="navitem on tap"><span className="material-symbols-outlined">dashboard</span>Dashboard</a>
               <Link href="/community" className="navitem tap"><span className="material-symbols-outlined">groups</span>Community</Link>
               <Link href="/learn" className="navitem tap"><span className="material-symbols-outlined">school</span>Learn</Link>
-              <Link href="/build" className="navitem tap"><span className="material-symbols-outlined">construction</span>Build</Link>
+              <Link href="/build-hub" className="navitem tap"><span className="material-symbols-outlined">construction</span>Build</Link>
               <Link href="/brand" className="navitem tap"><span className="material-symbols-outlined">verified</span>Brand</Link>
               
               <div className="spacer"></div>

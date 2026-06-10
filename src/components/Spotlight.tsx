@@ -9,7 +9,7 @@ interface SpotlightProps {
 
 export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
   return (
-    <Link href="/build" className="spot tap" style={{ display: 'block', textDecoration: 'none' }}>
+    <Link href="/build-hub" className="spot tap" style={{ display: 'block', textDecoration: 'none' }}>
       <div className="ph">
         <div
           className="grad-tag pill"
