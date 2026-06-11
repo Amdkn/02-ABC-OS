@@ -15,7 +15,7 @@ export interface Course {
   title: string;
   sub: string;
   desc: string;
-  category: 'structuration' | 'agentic' | 'autodidact';
+  category: 'structuration' | 'agentic' | 'autodidact' | 'productivity' | 'solarpunk';
   progress: number;
   icon: string;
   accent: string;
@@ -45,6 +45,20 @@ export const LEARN_CATEGORIES = [
     desc: "Méthodologies d'assimilation accélérée de compétences.",
     icon: 'school',
     accent: 'var(--primary)',
+  },
+  {
+    id: 'productivity',
+    title: 'Personal Productivity',
+    desc: 'Optimiser son énergie, son temps et son organisation au quotidien.',
+    icon: 'schedule',
+    accent: 'var(--build-blue)',
+  },
+  {
+    id: 'solarpunk',
+    title: 'Solarpunk Civilisation',
+    desc: 'Concevoir des futurs durables, circulaires et low-tech.',
+    icon: 'eco',
+    accent: 'var(--community)',
   }
 ];
 
@@ -473,8 +487,8 @@ export const LEARN_COURSES: Course[] = [
         id: 'ust-m1',
         title: 'M1: Neurobiologie de l\'Attention',
         chapters: [
-          { id: 'ust-m1-c1', title: 'Ch. 1 : Comment le cerveau encode une nouvelle information', duration: '20m' },
-          { id: 'ust-m1-c2', title: 'Ch. 2 : Capturer l\'attention d\'un apprenant fatigué', duration: '15m' }
+          { id: 'ust-m1-c1', title: 'Ch. 1 : Comprendre le mode diffus du cerveau', duration: '20m' },
+          { id: 'ust-m1-c2', title: 'Ch. 2 : Technique de répétition espacée', duration: '15m' }
         ]
       },
       {
@@ -603,6 +617,375 @@ export const LEARN_COURSES: Course[] = [
         chapters: [
           { id: 'mg-m2-c1', title: 'Ch. 3 : Structurer sa synthèse en standard Geordi Premium', duration: '25m' },
           { id: 'mg-m2-c2', title: 'Ch. 4 : Insérer des triggers et cas d\'usages réels', duration: '25m' }
+        ]
+      }
+    ]
+  },
+
+  // === CATEGORY: Productivity ===
+  {
+    id: 'ikigai',
+    title: 'Ikigai',
+    sub: 'Personal Productivity',
+    desc: 'Trouver sa raison d\'être et aligner passion, mission, vocation et profession au quotidien.',
+    category: 'productivity',
+    progress: 50,
+    icon: 'favorite',
+    accent: 'var(--build-blue)',
+    lessonsCount: 8,
+    duration: '1h 50m',
+    modules: [
+      {
+        id: 'ik-m1',
+        title: 'M1: Les Quatre Cercles de l\'Ikigai',
+        chapters: [
+          { id: 'ik-m1-c1', title: 'Ch. 1 : Ce que vous aimez (vos passions réelles)', duration: '15m' },
+          { id: 'ik-m1-c2', title: 'Ch. 2 : Ce en quoi vous êtes doué (vos forces)', duration: '15m' },
+          { id: 'ik-m1-c3', title: 'Ch. 3 : Ce dont le monde a besoin et ce pour quoi vous pouvez être payé', duration: '20m' }
+        ]
+      },
+      {
+        id: 'ik-m2',
+        title: 'M2: Alignement & Planification',
+        chapters: [
+          { id: 'ik-m2-c1', title: 'Ch. 4 : Cartographier son Ikigai individuel et collectif', duration: '30m' },
+          { id: 'ik-m2-c2', title: 'Ch. 5 : Éviter les désalignements majeurs en entreprise', duration: '30m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'lifewheel',
+    title: 'Life Wheel',
+    sub: 'Personal Productivity',
+    desc: 'Évaluer et équilibrer régulièrement les 8 dimensions de vie pour une efficacité saine et sans épuisement.',
+    category: 'productivity',
+    progress: 0,
+    icon: 'change_history',
+    accent: 'var(--build-blue)',
+    lessonsCount: 6,
+    duration: '1h 25m',
+    modules: [
+      {
+        id: 'lw-m1',
+        title: 'M1: Cartographie de la Roue de Vie',
+        chapters: [
+          { id: 'lw-m1-c1', title: 'Ch. 1 : Les 8 piliers : Santé, Finance, Carrière, Couple, Social, Mental, Loisirs, Environnement', duration: '25m' },
+          { id: 'lw-m1-c2', title: 'Ch. 2 : Établir son score initial de satisfaction', duration: '15m' }
+        ]
+      },
+      {
+        id: 'lw-m2',
+        title: 'M2: Plan de Rééquilibrage',
+        chapters: [
+          { id: 'lw-m2-c1', title: 'Ch. 3 : Définir des actions concrètes pour les piliers faibles', duration: '25m' },
+          { id: 'lw-m2-c2', title: 'Ch. 4 : Suivi mensuel et rituels d\'ajustement', duration: '20m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: '12wy',
+    title: '12 Weeks Year',
+    sub: 'Personal Productivity',
+    desc: 'Condenser ses objectifs annuels en sprints de 12 semaines pour forcer l\'action et le focus.',
+    category: 'productivity',
+    progress: 0,
+    icon: 'hourglass_empty',
+    accent: 'var(--build-blue)',
+    lessonsCount: 10,
+    duration: '2h 45m',
+    modules: [
+      {
+        id: '12wy-m1',
+        title: 'M1: Redéfinir son Horizon Temporel',
+        chapters: [
+          { id: '12wy-m1-c1', title: 'Ch. 1 : L\'illusion de l\'année de 12 mois', duration: '20m' },
+          { id: '12wy-m1-c2', title: 'Ch. 2 : L\'urgence saine de la semaine de 7 jours', duration: '15m' }
+        ]
+      },
+      {
+        id: '12wy-m2',
+        title: 'M2: Planifier & Mesurer son Sprint',
+        chapters: [
+          { id: '12wy-m2-c1', title: 'Ch. 3 : Écrire son plan tactique pour 12 semaines', duration: '30m' },
+          { id: '12wy-m2-c2', title: 'Ch. 4 : Score d\'exécution hebdomadaire : mesurer l\'action, pas le résultat', duration: '20m' },
+          { id: '12wy-m2-c3', title: 'Ch. 5 : Gérer le buffer de récupération', duration: '20m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'secondbrain',
+    title: 'Second Brain PARA',
+    sub: 'Personal Productivity',
+    desc: 'Organiser et stocker efficacement ses notes et documents avec la méthodologie de Tiago Forte.',
+    category: 'productivity',
+    progress: 10,
+    icon: 'cloud_queue',
+    accent: 'var(--build-blue)',
+    lessonsCount: 9,
+    duration: '2h 10m',
+    modules: [
+      {
+        id: 'sb-m1',
+        title: 'M1: Capturer & Filtrer (CODE)',
+        chapters: [
+          { id: 'sb-m1-c1', title: 'Ch. 1 : L\'importance d\'un système externe de mémoire', duration: '15m' },
+          { id: 'sb-m1-c2', title: 'Ch. 2 : Capturer la bonne information sans surcharge', duration: '20m' },
+          { id: 'sb-m1-c3', title: 'Ch. 3 : Organiser selon l\'actionnabilité', duration: '20m' }
+        ]
+      },
+      {
+        id: 'sb-m2',
+        title: 'M2: La Structure P.A.R.A.',
+        chapters: [
+          { id: 'sb-m2-c1', title: 'Ch. 4 : P pour Projects (objectifs actifs)', duration: '20m' },
+          { id: 'sb-m2-c2', title: 'Ch. 5 : A pour Areas (responsabilités permanentes)', duration: '20m' },
+          { id: 'sb-m2-c3', title: 'Ch. 6 : R/A pour Resources & Archives', duration: '35m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'gtd',
+    title: 'Getting Things Done',
+    sub: 'Personal Productivity',
+    desc: 'La méthode incontournable de David Allen pour libérer sa charge mentale et structurer ses tâches.',
+    category: 'productivity',
+    progress: 0,
+    icon: 'task_alt',
+    accent: 'var(--build-blue)',
+    lessonsCount: 11,
+    duration: '3h 05m',
+    modules: [
+      {
+        id: 'gtd-m1',
+        title: 'M1: Les 5 Étapes du Flux de Travail',
+        chapters: [
+          { id: 'gtd-m1-c1', title: 'Ch. 1 : Capturer tout ce qui encombre l\'esprit', duration: '15m' },
+          { id: 'gtd-m1-c2', title: 'Ch. 2 : Clarifier : décider si l\'action est requise', duration: '20m' },
+          { id: 'gtd-m1-c3', title: 'Ch. 3 : Organiser : listes, agenda et dossiers de référence', duration: '25m' }
+        ]
+      },
+      {
+        id: 'gtd-m2',
+        title: 'M2: Réflexion & Engagement',
+        chapters: [
+          { id: 'gtd-m2-c1', title: 'Ch. 4 : La revue hebdomadaire (Weekly Review) : clé de voûte', duration: '30m' },
+          { id: 'gtd-m2-c2', title: 'Ch. 5 : Choisir l\'action selon le contexte, le temps et l\'énergie', duration: '20m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: '4h-workweek',
+    title: '4H Workweek D.E.A.L',
+    sub: 'Personal Productivity',
+    desc: 'Définir de nouvelles règles du jeu, éliminer le superflu, automatiser ses revenus et se libérer.',
+    category: 'productivity',
+    progress: 0,
+    icon: 'explore',
+    accent: 'var(--build-blue)',
+    lessonsCount: 8,
+    duration: '2h 20m',
+    modules: [
+      {
+        id: '4h-m1',
+        title: 'M1: Définir & Éliminer (D & E)',
+        chapters: [
+          { id: '4h-m1-c1', title: 'Ch. 1 : Définition de la philosophie des Nouveaux Riches', duration: '20m' },
+          { id: '4h-m1-c2', title: 'Ch. 2 : Diète d\'information et élimination du multitâche', duration: '20m' }
+        ]
+      },
+      {
+        id: '4h-m2',
+        title: 'M2: Automatiser & Libérer (A & L)',
+        chapters: [
+          { id: '4h-m2-c1', title: 'Ch. 3 : Sous-traiter sa vie et bâtir des "muses" de revenus', duration: '30m' },
+          { id: '4h-m2-c2', title: 'Ch. 4 : Mobilité géographique et souveraineté temporelle', duration: '25m' }
+        ]
+      }
+    ]
+  },
+
+  // === CATEGORY: Solarpunk ===
+  {
+    id: 'biomimetisme',
+    title: 'Biomimétisme',
+    sub: 'Solarpunk Civilisation',
+    desc: 'S\'inspirer des modèles et stratégies de la nature pour concevoir des technologies et systèmes résilients.',
+    category: 'solarpunk',
+    progress: 0,
+    icon: 'park',
+    accent: 'var(--community)',
+    lessonsCount: 8,
+    duration: '2h 15m',
+    modules: [
+      {
+        id: 'bio-m1',
+        title: 'M1: Nature comme Modèle (Janine Benyus)',
+        chapters: [
+          { id: 'bio-m1-c1', title: 'Ch. 1 : Les 9 lois de la nature selon le biomimétisme', duration: '20m' },
+          { id: 'bio-m1-c2', title: 'Ch. 2 : Passer du biomimétisme de forme au biomimétisme d\'écosystème', duration: '25m' }
+        ]
+      },
+      {
+        id: 'bio-m2',
+        title: 'M2: Applications Pratiques',
+        chapters: [
+          { id: 'bio-m2-c1', title: 'Ch. 3 : Études de cas : trains Shinkansen, climatisation des termitières', duration: '25m' },
+          { id: 'bio-m2-c2', title: 'Ch. 4 : Matériaux bio-inspirés et chimie douce', duration: '25m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'circular-economy',
+    title: 'Circular Economy',
+    sub: 'Solarpunk Civilisation',
+    desc: 'Repenser nos cycles industriels pour éliminer le concept même de déchet (fondation Ellen MacArthur).',
+    category: 'solarpunk',
+    progress: 15,
+    icon: 'sync',
+    accent: 'var(--community)',
+    lessonsCount: 9,
+    duration: '2h 30m',
+    modules: [
+      {
+        id: 'ce-m1',
+        title: 'M1: Éliminer les Déchets dès la Conception',
+        chapters: [
+          { id: 'ce-m1-c1', title: 'Ch. 1 : Le modèle linéaire "Prendre-Fabriquer-Jeter" et ses limites', duration: '20m' },
+          { id: 'ce-m1-c2', title: 'Ch. 2 : Cycles techniques vs cycles biologiques', duration: '25m' }
+        ]
+      },
+      {
+        id: 'ce-m2',
+        title: 'M2: Modèles d\'Affaires Circulaires',
+        chapters: [
+          { id: 'ce-m2-c1', title: 'Ch. 3 : L\'économie de la fonctionnalité (louer au lieu de vendre)', duration: '25m' },
+          { id: 'ce-m2-c2', title: 'Ch. 4 : Conception modulaire et réparabilité infinie', duration: '30m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'blue-economy',
+    title: 'Blue Economy',
+    sub: 'Solarpunk Civilisation',
+    desc: 'Créer de la valeur locale en s\'appuyant sur les ressources disponibles à la manière des écosystèmes.',
+    category: 'solarpunk',
+    progress: 0,
+    icon: 'water',
+    accent: 'var(--community)',
+    lessonsCount: 7,
+    duration: '1h 55m',
+    modules: [
+      {
+        id: 'be-m1',
+        title: 'M1: Les Principes de Gunter Pauli',
+        chapters: [
+          { id: 'be-m1-c1', title: 'Ch. 1 : Travailler avec ce qui est localement disponible', duration: '20m' },
+          { id: 'be-m1-c2', title: 'Ch. 2 : Multiplier les sources de revenus (cas du café et des champignons)', duration: '25m' }
+        ]
+      },
+      {
+        id: 'be-m2',
+        title: 'M2: Innovations & Biomimétisme Économique',
+        chapters: [
+          { id: 'be-m2-c1', title: 'Ch. 3 : Du déchet à la ressource : cycles de nutriments croisés', duration: '25m' },
+          { id: 'be-m2-c2', title: 'Ch. 4 : Énergie et physique de flux au lieu de la chimie lourde', duration: '20m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'low-tech',
+    title: 'Low Tech',
+    sub: 'Solarpunk Civilisation',
+    desc: 'Développer des technologies utiles, durables, réparables et localement appropriables.',
+    category: 'solarpunk',
+    progress: 0,
+    icon: 'handyman',
+    accent: 'var(--community)',
+    lessonsCount: 8,
+    duration: '2h 10m',
+    modules: [
+      {
+        id: 'lt-m1',
+        title: 'M1: Utilité, Sobriété, Accessibilité',
+        chapters: [
+          { id: 'lt-m1-c1', title: 'Ch. 1 : Définir la "Low-tech" face à la "High-tech"', duration: '15m' },
+          { id: 'lt-m1-c2', title: 'Ch. 2 : Analyse du cycle de vie complet de nos outils', duration: '20m' }
+        ]
+      },
+      {
+        id: 'lt-m2',
+        title: 'M2: Catalogue d\'Innovations Low-Tech',
+        chapters: [
+          { id: 'lt-m2-c1', title: 'Ch. 3 : Systèmes solaires thermiques, biogaz et conservation passive', duration: '30m' },
+          { id: 'lt-m2-c2', title: 'Ch. 4 : L\'importance des plans open-source pour la souveraineté technique', duration: '25m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'urban-acupuncture',
+    title: 'Urban Acupuncture',
+    sub: 'Solarpunk Civilisation',
+    desc: 'Jaime Lerner : Revitaliser l\'écosystème urbain via des impulsions et micro-interventions ciblées.',
+    category: 'solarpunk',
+    progress: 0,
+    icon: 'location_city',
+    accent: 'var(--community)',
+    lessonsCount: 6,
+    duration: '1h 35m',
+    modules: [
+      {
+        id: 'ua-m1',
+        title: 'M1: La Ville comme Organisme Vivant',
+        chapters: [
+          { id: 'ua-m1-c1', title: 'Ch. 1 : Identifier les points de pression majeurs d\'une ville', duration: '20m' },
+          { id: 'ua-m1-c2', title: 'Ch. 2 : Curitiba : comment une impulsion transport a sauvé une ville', duration: '20m' }
+        ]
+      },
+      {
+        id: 'ua-m2',
+        title: 'M2: Interventions Légères & Impact Majeur',
+        chapters: [
+          { id: 'ua-m2-c1', title: 'Ch. 3 : Espaces publics partagés et urbanisme tactique', duration: '25m' },
+          { id: 'ua-m2-c2', title: 'Ch. 4 : Connecter les citoyens à la nature urbaine', duration: '15m' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'age-connaissance',
+    title: 'L\'âge de la Connaissance',
+    sub: 'Solarpunk Civilisation',
+    desc: 'Idriss Aberkane : Comprendre l\'économie de la connaissance (ressource infinie) pour concevoir l\'avenir.',
+    category: 'solarpunk',
+    progress: 0,
+    icon: 'psychology',
+    accent: 'var(--community)',
+    lessonsCount: 8,
+    duration: '2h 05m',
+    modules: [
+      {
+        id: 'ac-m1',
+        title: 'M1: Les Lois de la Connaissance',
+        chapters: [
+          { id: 'ac-m1-c1', title: 'Ch. 1 : L\'échange de connaissance est à somme positive', duration: '20m' },
+          { id: 'ac-m1-c2', title: 'Ch. 2 : Flux d\'attention et flux d\'information', duration: '20m' }
+        ]
+      },
+      {
+        id: 'ac-m2',
+        title: 'M2: Noopolitique et Souveraineté',
+        chapters: [
+          { id: 'ac-m2-c1', title: 'Ch. 3 : L\'importance du biomimétisme conceptuel', duration: '25m' },
+          { id: 'ac-m2-c2', title: 'Ch. 4 : Libérer la transmission de savoir : le standard Geordi', duration: '20m' }
         ]
       }
     ]

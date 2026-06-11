@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { HubLayout } from '@/components/HubLayout';
-import { LEARN_CATEGORIES, LEARN_COURSES, Course, Module, Chapter } from '@/data/learnData';
+import { LEARN_CATEGORIES, LEARN_COURSES } from '@/data/learnData';
 
 export default function LearnHubPage() {
   const [activeTab, setActiveTab] = useState(0);
@@ -100,6 +100,12 @@ export default function LearnHubPage() {
               )}
               {selectedCourse.category === 'autodidact' && (
                 <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('autodidact'); }}>Autodidacte</span>
+              )}
+              {selectedCourse.category === 'productivity' && (
+                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('productivity'); }}>Productivité</span>
+              )}
+              {selectedCourse.category === 'solarpunk' && (
+                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('solarpunk'); }}>Solarpunk</span>
               )}
               <span className="material-symbols-outlined text-[12px]">chevron_right</span>
               <span className="text-[var(--ink)] truncate max-w-[150px]">{selectedCourse.title}</span>
