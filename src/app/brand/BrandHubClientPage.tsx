@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { HubLayout } from '@/components/HubLayout';
 import { SvgGauge } from '@/components/SvgGauge';
 
@@ -17,27 +18,29 @@ export default function BrandHubClientPage({
   notes,
   recordedAt,
 }: BrandHubClientPageProps) {
+  const t = useTranslations('hubs.brand');
+
   const tabs: [string, string | null][] = [
-    ['Story', null],
-    ['Reach', null],
-    ['Impact', null],
+    [t('tabs.story'), null],
+    [t('tabs.reach'), null],
+    [t('tabs.impact'), null],
   ];
 
   const formatDelta = (d: number) => {
-    if (d > 0) return `+${d} cette semaine`;
-    if (d < 0) return `${d} cette semaine`;
-    return 'Stable cette semaine';
+    if (d > 0) return t('impactDeltaUp', { delta: d });
+    if (d < 0) return t('impactDeltaDown', { delta: d });
+    return t('impactDeltaFlat');
   };
 
   return (
     <HubLayout
       hubKey="brand"
       tabs={tabs}
-      searchPlaceholder="Rechercher modèles & assets"
+      searchPlaceholder={t('searchPlaceholder')}
     >
       <div className="hsec px-0 flex flex-col items-center pt-6 text-center">
         <div className="eyebrow font-bold tracking-widest text-[var(--brand-gold)]" style={{ letterSpacing: '.2em' }}>
-          BRAND IMPACT
+          {t('impactLabel')}
         </div>
         <div style={{ display: 'grid', placeItems: 'center', margin: '14px 0 6px' }}>
           <SvgGauge score={score} size={168} stroke={14} />
@@ -56,11 +59,11 @@ export default function BrandHubClientPage({
           {formatDelta(delta)}
         </div>
         <p style={{ margin: '14px auto 0', maxWidth: '260px', fontSize: '13.5px', color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-          {notes || 'Résonance actuelle de votre communauté. Croissance régulière.'}
+          {notes || t('impactLede')}
         </p>
         {recordedAt && (
           <div className="text-[10px] text-[var(--ink-faint)] mt-2">
-            Mis à jour le : {new Date(recordedAt).toLocaleDateString('fr-FR')}
+            {t('updatedOn', { date: new Date(recordedAt).toLocaleDateString('en-US') })}
           </div>
         )}
       </div>
@@ -81,8 +84,8 @@ export default function BrandHubClientPage({
             <span className="material-symbols-outlined">auto_stories</span>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: '14px' }}>Renforcer la brand story</div>
-            <div style={{ fontSize: '12px', color: 'var(--ink-soft)' }}>2 sections manquantes · +4 impact</div>
+            <div style={{ fontWeight: 700, fontSize: '14px' }}>{t('strengthenStory')}</div>
+            <div style={{ fontSize: '12px', color: 'var(--ink-soft)' }}>{t('strengthenStorySub')}</div>
           </div>
           <span className="material-symbols-outlined text-neutral-500">chevron_right</span>
         </div>

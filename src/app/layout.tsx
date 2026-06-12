@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Fraunces } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -20,13 +22,16 @@ export const metadata: Metadata = {
   description: "African Business Co-ops Sovereign Operating System — Terracotta & Solarpunk design",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="fr" className="dark">
+    <html lang={locale} className="dark">
       <head>
         {/* Material Symbols Outlined stylesheet link */}
         <link
@@ -40,7 +45,9 @@ export default function RootLayout({
           fontFamily: "var(--font-space-grotesk), system-ui, sans-serif",
         }}
       >
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

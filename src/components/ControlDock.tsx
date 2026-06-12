@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 export type DeviceMode = 'mobile' | 'desktop';
 export type ThemeMode = 'light' | 'dark';
@@ -21,10 +22,11 @@ export const ControlDock: React.FC<ControlDockProps> = ({
   appState,
   setAppState,
 }) => {
+  const t = useTranslations('common');
   return (
     <div className="dock" id="dock">
       <span className="lbl">ABC OS</span>
-      
+
       {/* Device Selection */}
       <div className="seg" id="seg-device">
         <button
@@ -32,64 +34,64 @@ export const ControlDock: React.FC<ControlDockProps> = ({
           className={device === 'mobile' ? 'on' : ''}
         >
           <span className="material-symbols-outlined">smartphone</span>
-          Mobile
+          {t('mobile')}
         </button>
         <button
           onClick={() => setDevice('desktop')}
           className={device === 'desktop' ? 'on' : ''}
         >
           <span className="material-symbols-outlined">desktop_windows</span>
-          Desktop
+          {t('desktop')}
         </button>
       </div>
-      
+
       <div className="vrule"></div>
-      
+
       {/* Theme Selection */}
       <div className="seg" id="seg-theme">
         <button
           onClick={() => setTheme('dark')}
           className={theme === 'dark' ? 'on' : ''}
-          aria-label="Mode sombre"
+          aria-label={t('ariaDarkMode')}
         >
           <span className="material-symbols-outlined">dark_mode</span>
         </button>
         <button
           onClick={() => setTheme('light')}
           className={theme === 'light' ? 'on' : ''}
-          aria-label="Mode clair"
+          aria-label={t('ariaLightMode')}
         >
           <span className="material-symbols-outlined">light_mode</span>
         </button>
       </div>
-      
+
       <div className="vrule"></div>
-      
+
       {/* App State Selection */}
       <div className="seg" id="seg-state">
         <button
           onClick={() => setAppState('ready')}
           className={appState === 'ready' ? 'on' : ''}
         >
-          Live
+          {t('live')}
         </button>
         <button
           onClick={() => setAppState('loading')}
           className={appState === 'loading' ? 'on' : ''}
         >
-          Loading
+          {t('loading')}
         </button>
         <button
           onClick={() => setAppState('empty')}
           className={appState === 'empty' ? 'on' : ''}
         >
-          Empty
+          {t('empty')}
         </button>
         <button
           onClick={() => setAppState('error')}
           className={appState === 'error' ? 'on' : ''}
         >
-          Offline
+          {t('offline')}
         </button>
       </div>
     </div>

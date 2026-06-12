@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { INITIAL_DATA } from '@/data/mockData';
 import { HubCard } from '@/components/HubCard';
 import { ActionCard } from '@/components/ActionCard';
@@ -16,6 +17,10 @@ export default function SandboxPage() {
   if (process.env.NODE_ENV === 'production') {
     notFound();
   }
+
+  const tCommon = useTranslations('common');
+  const tDash = useTranslations('dashboard');
+  const tSandbox = useTranslations('sandbox');
 
   const [device, setDevice] = useState<DeviceMode>('mobile');
   const [theme, setTheme] = useState<ThemeMode>('dark');
@@ -48,9 +53,9 @@ export default function SandboxPage() {
 
   const greeting = () => {
     const hr = new Date().getHours();
-    if (hr < 12) return 'Bonjour';
-    if (hr < 18) return 'Bon après-midi';
-    return 'Bonsoir';
+    if (hr < 12) return tDash('greetingMorning');
+    if (hr < 18) return tDash('greetingAfternoon');
+    return tDash('greetingEvening');
   };
 
   // Renders the skeleton loaders for Loading state
@@ -124,11 +129,16 @@ export default function SandboxPage() {
         <div className="big">
           <span className="material-symbols-outlined">rocket_launch</span>
         </div>
-        <h3>Bienvenue dans ABC OS</h3>
-        <p>Votre coopérative <b>{data.coop}</b> démarre. Invitez vos membres et lancez votre premier projet pour faire vibrer les 4 hubs.</p>
+        <h3>{tDash('emptyTitle')}</h3>
+        <p>
+          {tSandbox.rich('emptyBody', {
+            b: (chunks) => <b>{chunks}</b>,
+            coop: data.coop,
+          })}
+        </p>
         <button className="btn-primary tap" onClick={handleSeed}>
           <span className="material-symbols-outlined" style={{ fontSize: '18px', marginRight: '6px' }}>group_add</span>
-          Inviter des membres
+          {tDash('inviteMembers')}
         </button>
       </div>
     </div>
@@ -137,11 +147,11 @@ export default function SandboxPage() {
   const renderMobileContent = () => {
     const syncPill = appState === 'error' ? (
       <button className="syncpill off tap" onClick={() => setAppState('ready')}>
-        <span className="led"></span>Hors-ligne
+        <span className="led"></span>{tDash('syncOffline')}
       </button>
     ) : (
       <button className="syncpill tap" onClick={() => setAppState('error')}>
-        <span className="led"></span>Synchro
+        <span className="led"></span>{tDash('syncOk')}
       </button>
     );
 
@@ -152,7 +162,7 @@ export default function SandboxPage() {
           <div className="me">
             <Avatar initials={data.member.initials} color={data.member.tint} className="av" />
             <div className="hello">
-              <div className="g">{greeting()}, bon retour</div>
+              <div className="g">{tSandbox('greetingLine', { greeting: greeting() })}</div>
               <div className="coop">
                 <span className="material-symbols-outlined">hub</span>
                 {data.coop}
@@ -161,7 +171,7 @@ export default function SandboxPage() {
           </div>
           <div className="right">
             {syncPill}
-            <button className="icbtn tap" aria-label="Notifications">
+            <button className="icbtn tap" aria-label={tCommon('ariaNotifications')}>
               <span className="material-symbols-outlined">notifications</span>
               <span className="dot-badge"></span>
             </button>
@@ -171,9 +181,9 @@ export default function SandboxPage() {
         {/* Hero */}
         <div className="hero">
           <div className="kick">
-            L'OS <em>en main</em>,
-            <br />
-            tout le temps.
+            {tSandbox.rich('heroMobile', {
+              em: (chunks) => <em>{chunks}</em>,
+            })}
           </div>
           <div className="sub">
             <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--secondary)' }}>location_on</span>
@@ -186,11 +196,11 @@ export default function SandboxPage() {
           <div className="errbar" style={{ marginTop: '14px' }}>
             <span className="material-symbols-outlined">cloud_off</span>
             <div>
-              <b>Synchronisation échouée</b>
+              <b>{tDash('syncFailed')}</b>
               <br />
-              <span style={{ color: 'var(--ink-soft)' }}>Données du cache · 2 modifications en attente</span>
+              <span style={{ color: 'var(--ink-soft)' }}>{tDash('syncFailedCache')}</span>
             </div>
-            <button onClick={handleRetry}>Réessayer</button>
+            <button onClick={handleRetry}>{tDash('retry')}</button>
           </div>
         )}
 
@@ -202,9 +212,9 @@ export default function SandboxPage() {
             {/* Pulse Hubs */}
             <div className="sec">
               <div className="sechd">
-                <h2>Pulse des hubs</h2>
+                <h2>{tDash('pulseTitle')}</h2>
                 <button className="more">
-                  Tout voir <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>chevron_right</span>
+                  {tCommon('seeAll')} <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>chevron_right</span>
                 </button>
               </div>
               <div className="pulse">
@@ -218,9 +228,9 @@ export default function SandboxPage() {
             {/* Next Best Actions */}
             <div className="sec">
               <div className="sechd">
-                <h2>Aujourd'hui</h2>
+                <h2>{tDash('todayTitle')}</h2>
                 <span className="more" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                  {data.actions.length} actions
+                  {tDash('todayActions', { count: data.actions.length })}
                 </span>
               </div>
               <div className="actions">
@@ -233,7 +243,7 @@ export default function SandboxPage() {
             {/* Spotlight */}
             <div className="sec">
               <div className="sechd">
-                <h2>Spotlight coopérative</h2>
+                <h2>{tDash('spotlightTitle')}</h2>
               </div>
               <Spotlight project={data.spotlight} />
             </div>
@@ -241,8 +251,8 @@ export default function SandboxPage() {
             {/* Recent activity feed */}
             <div className="sec">
               <div className="sechd">
-                <h2>Activité récente</h2>
-                <button className="more">Tout voir</button>
+                <h2>{tDash('feedTitle')}</h2>
+                <button className="more">{tCommon('seeAll')}</button>
               </div>
               <div className="feed">
                 {data.feed.map((item, idx) => (
@@ -259,11 +269,11 @@ export default function SandboxPage() {
   const renderDesktopContent = () => {
     const syncPill = appState === 'error' ? (
       <button className="syncpill off tap" onClick={() => setAppState('ready')}>
-        <span className="led"></span>Hors-ligne · cache
+        <span className="led"></span>{tDash('syncOfflineCache')}
       </button>
     ) : (
       <button className="syncpill tap" onClick={() => setAppState('error')}>
-        <span className="led"></span>Synchronisé
+        <span className="led"></span>{tDash('syncOk')}
       </button>
     );
 
@@ -273,9 +283,10 @@ export default function SandboxPage() {
         <div className="deskhead">
           <div>
             <div className="kick">
-              {greeting()} Amara,
-              <br />
-              l'OS <em>en main</em>.
+              {tSandbox.rich('heroDesktop', {
+                name: tDash('fallbackMemberName'),
+                em: (chunks) => <em>{chunks}</em>,
+              })}
             </div>
             <div className="sub">
               <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--secondary)' }}>hub</span>
@@ -284,13 +295,13 @@ export default function SandboxPage() {
           </div>
           <div className="right">
             {syncPill}
-            <button className="icbtn tap" aria-label="Notifications">
+            <button className="icbtn tap" aria-label={tCommon('ariaNotifications')}>
               <span className="material-symbols-outlined">notifications</span>
               <span className="dot-badge"></span>
             </button>
             <button className="btn-primary tap" style={{ marginTop: 0 }}>
               <span className="material-symbols-outlined">bolt</span>
-              Action rapide
+              {tDash('quickAction')}
             </button>
           </div>
         </div>
@@ -300,9 +311,9 @@ export default function SandboxPage() {
           <div className="errbar" style={{ margin: '0 0 18px' }}>
             <span className="material-symbols-outlined">cloud_off</span>
             <div>
-              <b>Synchronisation échouée</b> — données du cache · 2 modifications en attente
+              <b>{tDash('syncFailed')}</b> — {tDash('syncFailedCache')}
             </div>
-            <button onClick={handleRetry}>Réessayer</button>
+            <button onClick={handleRetry}>{tDash('retry')}</button>
           </div>
         )}
 
@@ -321,13 +332,13 @@ export default function SandboxPage() {
             </div>
             <div className="b-spot b-card">
               <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>Spotlight coopérative</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>{tDash('spotlightTitle')}</h3>
               </div>
               <Spotlight project={data.spotlight} />
             </div>
             <div className="b-actions b-card">
               <div className="hd">
-                <h3>Aujourd'hui · Next best action</h3>
+                <h3>{tDash('todayTitleDesktop')}</h3>
                 <span className="more" style={{ color: 'var(--primary)', fontWeight: 700 }}>
                   {data.actions.length}
                 </span>
@@ -346,8 +357,8 @@ export default function SandboxPage() {
             </div>
             <div className="b-feed b-card">
               <div className="hd">
-                <h3>Activité cross-hub</h3>
-                <button className="more">Tout voir</button>
+                <h3>{tDash('crossHubFeedTitle')}</h3>
+                <button className="more">{tCommon('seeAll')}</button>
               </div>
               <div className="feed">
                 {data.feed.map((item, idx) => (
@@ -363,16 +374,16 @@ export default function SandboxPage() {
 
   return (
     <div className="stage grain min-h-screen w-full flex flex-col justify-start items-center">
-      
+
       {/* Back button to real dashboard */}
       <Link href="/" className="absolute top-4 left-4 z-50 bg-[var(--card)] hover:bg-neutral-800 p-2.5 rounded-lg border border-[var(--line)] flex items-center gap-1.5 text-sm text-[var(--ink)] transition-colors no-underline">
         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-        Application réelle
+        {tCommon('backToApp')}
       </Link>
 
       {/* ============ MOBILE FRAME PREVIEW ============ */}
       {device === 'mobile' && (
-        <div className="phone-wrap py-8" data-screen-label="Dashboard (Mobile)">
+        <div className="phone-wrap py-8" data-screen-label={tSandbox('mobileFrameLabel')}>
           <div className="phone">
             <div className="screen">
               <div className="notch"></div>
@@ -384,20 +395,20 @@ export default function SandboxPage() {
                   <span className="material-symbols-outlined">battery_full</span>
                 </span>
               </div>
-              
+
               <div className="scroll noscroll">
                 {renderMobileContent()}
               </div>
 
-              <button className="fab tap" id="m-fab" aria-label="Action rapide">
+              <button className="fab tap" id="m-fab" aria-label={tDash('quickAction')}>
                 <span className="material-symbols-outlined">add</span>
               </button>
 
-              <nav className="nav" aria-label="Navigation principale">
-                <Link href="/community" className="tap"><span className="material-symbols-outlined">groups</span>Community</Link>
-                <Link href="/learn" className="tap"><span className="material-symbols-outlined">school</span>Learn</Link>
-                <Link href="/build-hub" className="tap"><span className="material-symbols-outlined">construction</span>Build</Link>
-                <Link href="/brand" className="tap"><span className="material-symbols-outlined">verified</span>Brand</Link>
+              <nav className="nav" aria-label={tCommon('ariaMainNav')}>
+                <Link href="/community" className="tap"><span className="material-symbols-outlined">groups</span>{tCommon('community')}</Link>
+                <Link href="/learn" className="tap"><span className="material-symbols-outlined">school</span>{tCommon('learn')}</Link>
+                <Link href="/build-hub" className="tap"><span className="material-symbols-outlined">construction</span>{tCommon('build')}</Link>
+                <Link href="/brand" className="tap"><span className="material-symbols-outlined">verified</span>{tCommon('brand')}</Link>
               </nav>
             </div>
           </div>
@@ -406,24 +417,24 @@ export default function SandboxPage() {
 
       {/* ============ DESKTOP PREVIEW ============ */}
       {device === 'desktop' && (
-        <div className="desk w-full max-w-[1440px] pt-12" data-screen-label="Dashboard (Desktop bento)">
+        <div className="desk w-full max-w-[1440px] pt-12" data-screen-label={tSandbox('desktopFrameLabel')}>
           <div className="deskgrid">
             <aside className="rail">
               <div className="brandmark">
                 <div className="logo">A</div>
                 <div>
                   <b>ABC OS</b>
-                  <s>African Business Co-ops</s>
+                  <s>{tSandbox('brandSlogan')}</s>
                 </div>
               </div>
-              <a className="navitem on tap"><span className="material-symbols-outlined">dashboard</span>Dashboard</a>
-              <Link href="/community" className="navitem tap"><span className="material-symbols-outlined">groups</span>Community</Link>
-              <Link href="/learn" className="navitem tap"><span className="material-symbols-outlined">school</span>Learn</Link>
-              <Link href="/build-hub" className="navitem tap"><span className="material-symbols-outlined">construction</span>Build</Link>
-              <Link href="/brand" className="navitem tap"><span className="material-symbols-outlined">verified</span>Brand</Link>
-              
+              <a className="navitem on tap"><span className="material-symbols-outlined">dashboard</span>{tCommon('dashboard')}</a>
+              <Link href="/community" className="navitem tap"><span className="material-symbols-outlined">groups</span>{tCommon('community')}</Link>
+              <Link href="/learn" className="navitem tap"><span className="material-symbols-outlined">school</span>{tCommon('learn')}</Link>
+              <Link href="/build-hub" className="navitem tap"><span className="material-symbols-outlined">construction</span>{tCommon('build')}</Link>
+              <Link href="/brand" className="navitem tap"><span className="material-symbols-outlined">verified</span>{tCommon('brand')}</Link>
+
               <div className="spacer"></div>
-              
+
               <div className="me2">
                 <div className="avatar av" style={{ background: 'linear-gradient(150deg,#FFC72C,#E57373)' }}>AO</div>
                 <div style={{ minWidth: 0 }}>

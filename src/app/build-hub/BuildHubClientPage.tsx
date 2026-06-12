@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { HubLayout } from '@/components/HubLayout';
 import { Avatar } from '@/components/Avatar';
 
@@ -72,20 +73,21 @@ export default function BuildHubClientPage({
   categories,
   catalogProjects,
 }: BuildHubClientPageProps) {
+  const t = useTranslations('hubs.build');
+
   const tabs: [string, string | null][] = [
-    ['Mes projets', projects.length > 0 ? String(projects.length) : null],
-    ['Outils coop', null],
+    [t('tabs.myProjects'), projects.length > 0 ? String(projects.length) : null],
+    [t('tabs.coopTools'), null],
   ];
 
-  // Le projet Solaris Agri-Coop ou le premier projet spotlight du hub Build
   const activeProject = projects.find(p => p.name === 'Solaris Agri-Coop') || projects[0];
 
-  const getStatusLabel = (status: Milestone['status']) => {
+  const getStatusLabel = (status: Milestone['status']): string => {
     switch (status) {
-      case 'completed': return 'Terminé';
-      case 'in_progress': return 'En cours';
-      case 'blocked': return 'Bloqué';
-      default: return 'En attente';
+      case 'completed': return t('statusCompleted');
+      case 'in_progress': return t('statusInProgress');
+      case 'blocked': return t('statusBlocked');
+      default: return t('statusPending');
     }
   };
 
@@ -98,7 +100,6 @@ export default function BuildHubClientPage({
     }
   };
 
-  // --- Catalogue Build Hub v2 : état d'expansion par catégorie / projet ---
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
@@ -120,7 +121,6 @@ export default function BuildHubClientPage({
     });
   };
 
-  // Compteurs D4 no self-contradiction
   const totals = useMemo(() => {
     const phasesCount = catalogProjects.reduce((acc, p) => acc + p.phases.length, 0);
     const tasksCount = catalogProjects.reduce(
@@ -139,7 +139,7 @@ export default function BuildHubClientPage({
     <HubLayout
       hubKey="build"
       tabs={tabs}
-      searchPlaceholder="Rechercher projets & outils"
+      searchPlaceholder={t('searchPlaceholder')}
     >
       <div className="hsec px-0">
 
@@ -164,18 +164,18 @@ export default function BuildHubClientPage({
                     display: 'inline-block',
                   }}
                 ></span>
-                EN COURS
+                {t('inProgress')}
               </span>
             </div>
             <div style={{ padding: '14px 15px 0' }}>
               <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 700 }}>{activeProject.name}</h3>
               <p style={{ margin: '5px 0 0', fontSize: '13px', color: 'var(--ink-soft)' }}>
-                {activeProject.description || 'Projet coopératif'} · {activeProject.place}
+                {activeProject.description || t('defaultProjectDesc')} · {activeProject.place}
               </p>
             </div>
             <div style={{ padding: '16px 15px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '7px' }}>
-                <b>Progression des jalons</b>
+                <b>{t('milestonesProgress')}</b>
                 <b style={{ color: 'var(--build-blue)' }}>{activeProject.ms} / {activeProject.msTotal}</b>
               </div>
               <div className="bar">
@@ -190,14 +190,14 @@ export default function BuildHubClientPage({
           </div>
         ) : (
           <div className="p-8 text-center text-xs text-[var(--ink-soft)] bg-[var(--card)] border border-[var(--line)] rounded-3xl mb-4">
-            Aucun projet actif trouvé.
+            {t('noProject')}
           </div>
         )}
 
-        {/* Milestones Sections (per-tenant — D4 coexistence) */}
+        {/* Milestones Sections */}
         <div className="hsec px-0 mt-4">
           <div className="hd mb-3">
-            <h2 className="text-lg font-bold">Prochains jalons</h2>
+            <h2 className="text-lg font-bold">{t('nextMilestones')}</h2>
           </div>
 
           {milestones.length > 0 ? (
@@ -222,7 +222,7 @@ export default function BuildHubClientPage({
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: '14px' }}>{ms.name}</div>
                     <div style={{ fontSize: '12px', color: 'var(--ink-soft)' }}>
-                      {ms.description || 'Aucune description'} {ms.dueDate ? `· Échéance : ${ms.dueDate}` : ''}
+                      {ms.description || t('defaultMilestoneDesc')} {ms.dueDate ? `· ${t('dueDatePrefix')} ${ms.dueDate}` : ''}
                     </div>
                   </div>
                   <span
@@ -239,22 +239,21 @@ export default function BuildHubClientPage({
             </div>
           ) : (
             <div className="p-8 text-center text-xs text-[var(--ink-soft)] bg-[var(--card)] border border-[var(--line)] rounded-3xl">
-              Aucun jalon configuré.
+              {t('noMilestone')}
             </div>
           )}
         </div>
 
         {/* ============================================================
             CATALOGUE BUILD HUB v2 (D10 shared catalog, ADR-ABCOS-001)
-            Hiérarchie 4 niveaux : 5 catégories > 17 projets > 48 phases > 141 tâches
-            (D3 drift : spec disait 40/111, seed SQL réel = 48/141)
+            Hierarchy 4 levels : 5 categories > 17 projects > 48 phases > 141 tasks
             ============================================================ */}
         <div className="hsec px-0 mt-6">
           <div className="hd mb-3 flex items-end justify-between gap-3 flex-wrap">
             <div>
-              <h2 className="text-lg font-bold">Catalogue Build Hub</h2>
+              <h2 className="text-lg font-bold">{t('catalogTitle')}</h2>
               <p className="text-xs text-[var(--ink-soft)] mt-1">
-                Bibliothèque souveraine de projets physiques — homesteading, architecture, off-grid, micro-revenue, agentic build.
+                {t('catalogSubtitle')}
               </p>
             </div>
             <div
@@ -264,13 +263,13 @@ export default function BuildHubClientPage({
                 color: 'var(--build-blue)',
               }}
             >
-              {totals.categories} cat. · {totals.projects} proj. · {totals.phases} phases · {totals.tasks} tâches
+              {t('totalsLabel', totals)}
             </div>
           </div>
 
           {categories.length === 0 ? (
             <div className="p-8 text-center text-xs text-[var(--ink-soft)] bg-[var(--card)] border border-[var(--line)] rounded-3xl">
-              Catalogue en cours de chargement.
+              {t('loading')}
             </div>
           ) : (
             <div className="flex flex-col gap-4">
@@ -282,7 +281,7 @@ export default function BuildHubClientPage({
                     key={cat.id}
                     className="rounded-3xl border border-[var(--line)] bg-[var(--card)] overflow-hidden"
                   >
-                    {/* En-tête catégorie (cliquable) */}
+                    {/* Category header (clickable) */}
                     <button
                       onClick={() => toggleCategory(cat.id)}
                       className="w-full p-5 flex items-center gap-4 text-left hover:bg-neutral-800/5 active:scale-[0.99] transition-all"
@@ -311,7 +310,7 @@ export default function BuildHubClientPage({
                             color: cat.accent,
                           }}
                         >
-                          {catProjects.length} projets
+                          {t('projectsCount', { count: catProjects.length })}
                         </span>
                         <span
                           className="material-symbols-outlined text-[20px] text-[var(--ink-faint)] transition-transform"
@@ -322,12 +321,12 @@ export default function BuildHubClientPage({
                       </div>
                     </button>
 
-                    {/* Projets (visibles si catégorie dépliée) */}
+                    {/* Projects (visible if category expanded) */}
                     {isExpanded && (
                       <div className="border-t border-[var(--line)] bg-neutral-800/[0.02] p-3 flex flex-col gap-2">
                         {catProjects.length === 0 ? (
                           <div className="p-4 text-center text-xs text-[var(--ink-soft)]">
-                            Aucun projet dans cette catégorie.
+                            {t('emptyCategory')}
                           </div>
                         ) : (
                           catProjects.map((proj) => {
@@ -359,7 +358,7 @@ export default function BuildHubClientPage({
                                       {proj.title}
                                     </h4>
                                     <div className="mt-1 flex gap-3 text-[11px] text-[var(--ink-faint)] font-medium">
-                                      <span>{proj.tasksCount} tâches</span>
+                                      <span>{t('tasksCount', { count: proj.tasksCount })}</span>
                                       <span>·</span>
                                       <span>{proj.duration}</span>
                                     </div>
@@ -372,12 +371,12 @@ export default function BuildHubClientPage({
                                   </span>
                                 </button>
 
-                                {/* Phases (visibles si projet déplié) */}
+                                {/* Phases (visible if project expanded) */}
                                 {isProjExpanded && (
                                   <div className="border-t border-[var(--line)] bg-neutral-800/[0.02] p-3 flex flex-col gap-3">
                                     {proj.phases.length === 0 ? (
                                       <div className="p-3 text-center text-xs text-[var(--ink-soft)]">
-                                        Aucune phase définie.
+                                        {t('emptyPhase')}
                                       </div>
                                     ) : (
                                       proj.phases.map((phase) => (
@@ -392,20 +391,20 @@ export default function BuildHubClientPage({
                                               {phase.title}
                                             </span>
                                             <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-md bg-neutral-800/10 text-[var(--ink-soft)]">
-                                              {phase.tasks.length} tâches
+                                              {t('tasksCount', { count: phase.tasks.length })}
                                             </span>
                                           </div>
                                           <ul className="divide-y divide-[var(--line)]">
-                                            {phase.tasks.map((t) => (
+                                            {phase.tasks.map((task) => (
                                               <li
-                                                key={t.id}
+                                                key={task.id}
                                                 className="px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-neutral-800/[0.03] transition-all"
                                               >
                                                 <span className="text-[12.5px] text-[var(--ink)] truncate">
-                                                  {t.title}
+                                                  {task.title}
                                                 </span>
                                                 <span className="text-[10.5px] text-[var(--ink-faint)] flex-shrink-0 font-medium">
-                                                  {t.duration}
+                                                  {task.duration}
                                                 </span>
                                               </li>
                                             ))}

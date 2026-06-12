@@ -1,26 +1,30 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { HubLayout } from '@/components/HubLayout';
 import { Avatar } from '@/components/Avatar';
 
 export default function CommunityHubPage() {
+  const t = useTranslations('hubs.community');
+  const tCommon = useTranslations('common');
+
   const tabs: [string, string | null][] = [
-    ['Feed', null],
-    ['Co-ops', null],
-    ['Events', '3'],
+    [t('tabs.feed'), null],
+    [t('tabs.coops'), null],
+    [t('tabs.events'), '3'],
   ];
 
   return (
     <HubLayout
       hubKey="community"
       tabs={tabs}
-      searchPlaceholder="Rechercher discussions et membres"
+      searchPlaceholder={t('searchPlaceholder')}
     >
       <div className="hsec px-0">
         <div className="hd flex justify-between items-center mb-3">
-          <h2 className="text-lg font-bold">Fil de l'assemblée</h2>
-          <button className="more text-sm font-semibold text-[var(--primary)]">Tout voir</button>
+          <h2 className="text-lg font-bold">{t('feedTitle')}</h2>
+          <button className="more text-sm font-semibold text-[var(--primary)]">{tCommon('seeAll')}</button>
         </div>
 
         {/* Card 1 */}
@@ -29,14 +33,14 @@ export default function CommunityHubPage() {
             <Avatar initials="KP" color="#E57373" className="w-[30px] h-[30px]" />
             <div>
               <div style={{ fontWeight: 700, fontSize: '14px' }}>Kaelan Patel</div>
-              <div style={{ fontSize: '12px', color: 'var(--ink-faint)' }}>il y a 2 h · Lagos, NG</div>
+              <div style={{ fontSize: '12px', color: 'var(--ink-faint)' }}>2 h ago · Lagos, NG</div>
             </div>
             <span className="material-symbols-outlined" style={{ marginLeft: 'auto', color: 'var(--ink-faint)' }}>
               more_horiz
             </span>
           </div>
           <p style={{ margin: '12px 0 0', fontSize: '14px', lineHeight: 1.5 }}>
-            Je cherche des conseils pour enregistrer une coopérative au Nigéria — quelqu'un a déjà fait la démarche ? Quelles sont les étapes clés ?
+            Looking for advice on registering a cooperative in Nigeria — has anyone gone through the process? What are the key steps?
           </p>
           <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
             <span className="pill" style={{ background: 'color-mix(in srgb, var(--secondary) 16%, transparent)', color: 'var(--secondary)' }}>
@@ -67,11 +71,11 @@ export default function CommunityHubPage() {
             <Avatar initials="FD" color="#00796B" className="w-[30px] h-[30px]" />
             <div>
               <div style={{ fontWeight: 700, fontSize: '14px' }}>Fatou Diallo</div>
-              <div style={{ fontSize: '12px', color: 'var(--ink-faint)' }}>il y a 5 h · Dakar, SN</div>
+              <div style={{ fontSize: '12px', color: 'var(--ink-faint)' }}>5 h ago · Dakar, SN</div>
             </div>
           </div>
           <p style={{ margin: '12px 0 0', fontSize: '14px', lineHeight: 1.5 }}>
-            Notre coopérative de teinture lance une formation indigo le mois prochain — places limitées !
+            Our indigo dyeing cooperative is launching a training next month — limited spots!
           </p>
         </div>
       </div>

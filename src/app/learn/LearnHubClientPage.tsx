@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { HubLayout } from '@/components/HubLayout';
 
 export interface Chapter {
@@ -46,6 +47,8 @@ export default function LearnHubClientPage({
   initialCategories,
   initialCourses,
 }: LearnHubClientPageProps) {
+  const t = useTranslations('hubs.learn');
+
   const [activeTab, setActiveTab] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -90,11 +93,11 @@ export default function LearnHubClientPage({
   const tabs: [string, string | null][] = useMemo(() => {
     const myCount = initialCourses.filter((c) => c.progress > 0).length;
     return [
-      ['Mes cours', myCount > 0 ? String(myCount) : null],
-      ['Parcours', null],
-      ['Certificats', null],
+      [t('myCourses'), myCount > 0 ? String(myCount) : null],
+      [t('tracks'), null],
+      [t('certificates'), null],
     ];
-  }, [initialCourses]);
+  }, [initialCourses, t]);
 
   const handleTabChange = (idx: number) => {
     setActiveTab(idx);
@@ -103,16 +106,25 @@ export default function LearnHubClientPage({
     setSearchQuery('');
   };
 
+  const categoryLabel = (cat: string): string => {
+    if (cat === 'structuration') return 'Structuration';
+    if (cat === 'agentic') return 'Agentic Architecture';
+    if (cat === 'autodidact') return 'Self-Directed';
+    if (cat === 'productivity') return 'Productivity';
+    if (cat === 'solarpunk') return 'Solarpunk';
+    return cat;
+  };
+
   return (
     <HubLayout
       hubKey="learn"
       tabs={tabs}
       searchPlaceholder={
-        selectedCourseId 
-          ? "Rechercher dans ce cours" 
-          : selectedCategoryId 
-            ? "Rechercher dans cette catégorie" 
-            : "Rechercher cours & sujets"
+        selectedCourseId
+          ? t('searchInCourse')
+          : selectedCategoryId
+            ? t('searchInCategory')
+            : t('searchPlaceholder')
       }
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
@@ -131,23 +143,9 @@ export default function LearnHubClientPage({
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             </button>
             <div className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 text-[var(--ink-faint)]">
-              <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId(null); setActiveTab(1); }}>Parcours</span>
+              <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId(null); setActiveTab(1); }}>{t('tracks')}</span>
               <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-              {selectedCourse.category === 'structuration' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('structuration'); }}>Structuration</span>
-              )}
-              {selectedCourse.category === 'agentic' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('agentic'); }}>Architecture Agentique</span>
-              )}
-              {selectedCourse.category === 'autodidact' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('autodidact'); }}>Autodidacte</span>
-              )}
-              {selectedCourse.category === 'productivity' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('productivity'); }}>Productivité</span>
-              )}
-              {selectedCourse.category === 'solarpunk' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('solarpunk'); }}>Solarpunk</span>
-              )}
+              <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId(selectedCourse.category); }}>{categoryLabel(selectedCourse.category)}</span>
               <span className="material-symbols-outlined text-[12px]">chevron_right</span>
               <span className="text-[var(--ink)] truncate max-w-[150px]">{selectedCourse.title}</span>
             </div>
@@ -156,7 +154,7 @@ export default function LearnHubClientPage({
           {/* En-tête du cours */}
           <div className="p-6 rounded-3xl bg-[var(--card)] border border-[var(--line)] mb-6 flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
             <div className="flex items-start gap-4 min-w-0">
-              <div 
+              <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{ background: `color-mix(in srgb, ${selectedCourse.accent} 15%, transparent)`, color: selectedCourse.accent }}
               >
@@ -173,13 +171,13 @@ export default function LearnHubClientPage({
 
             <div className="flex flex-col gap-2 w-full md:w-auto items-stretch md:items-end">
               <div className="text-xs font-semibold text-[var(--ink-faint)]">
-                {selectedCourse.lessonsCount} leçons · {selectedCourse.duration}
+                {t('lessonsCount', { count: selectedCourse.lessonsCount })} · {selectedCourse.duration}
               </div>
-              <button 
+              <button
                 className="btn py-2 px-5 rounded-xl font-semibold text-white shadow-sm hover:opacity-90 active:scale-95 transition-all text-center text-[13.5px]"
                 style={{ background: `linear-gradient(135deg, ${selectedCourse.accent}, color-mix(in srgb, ${selectedCourse.accent} 75%, #000))` }}
               >
-                {selectedCourse.progress > 0 ? 'Reprendre le cours' : 'Commencer le cours'}
+                {selectedCourse.progress > 0 ? t('resumeCourse') : t('startCourse')}
               </button>
             </div>
           </div>
@@ -188,11 +186,11 @@ export default function LearnHubClientPage({
           {selectedCourse.progress > 0 && (
             <div className="p-4 rounded-2xl bg-[var(--card)] border border-[var(--line)] mb-6 flex items-center justify-between gap-5">
               <div className="flex-1">
-                <span className="text-xs font-bold text-[var(--ink-faint)] block mb-1">Votre progression</span>
+                <span className="text-xs font-bold text-[var(--ink-faint)] block mb-1">{t('yourProgress')}</span>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-2.5 bg-neutral-800/10 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full" 
+                    <div
+                      className="h-full rounded-full"
                       style={{ width: `${selectedCourse.progress}%`, background: selectedCourse.accent }}
                     />
                   </div>
@@ -205,7 +203,7 @@ export default function LearnHubClientPage({
           {/* Programme détaillé */}
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--ink)]">
             <span className="material-symbols-outlined text-[20px] text-[var(--ink-faint)]">toc</span>
-            Programme du cours
+            {t('programTitle')}
           </h2>
 
           <div className="flex flex-col gap-4">
@@ -215,22 +213,21 @@ export default function LearnHubClientPage({
                 <div className="p-4 border-b border-[var(--line)] bg-neutral-800/5 flex justify-between items-center">
                   <span className="font-bold text-sm text-[var(--ink)]">{mod.title}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-neutral-800/10 text-[var(--ink-soft)]">
-                    {mod.chapters.length} chapitres
+                    {t('chapterCount', { count: mod.chapters.length })}
                   </span>
                 </div>
 
                 {/* Chapitres */}
                 <div className="divide-y divide-[var(--line)]">
                   {mod.chapters.map((chap, chapIdx) => {
-                    // Calcul d'une complétion simulée basée sur la progression globale
                     const isCompleted = selectedCourse.progress > (modIdx * 30 + chapIdx * 12);
                     return (
                       <div key={chap.id} className="p-4 flex items-center justify-between gap-4 hover:bg-neutral-800/5 transition-all">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div 
+                          <div
                             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                              isCompleted 
-                                ? 'text-white' 
+                              isCompleted
+                                ? 'text-white'
                                 : 'border border-[var(--line)] text-[var(--ink-faint)]'
                             }`}
                             style={isCompleted ? { background: selectedCourse.accent } : {}}
@@ -258,18 +255,18 @@ export default function LearnHubClientPage({
       {!selectedCourse && activeTab === 0 && (
         <div className="my-courses-tab animate-fadeIn">
           <div className="hd flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Mes formations en cours</h2>
+            <h2 className="text-lg font-bold">My courses in progress</h2>
           </div>
 
           {myCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {myCourses.map((course) => (
-                <div 
+                <div
                   key={course.id}
                   onClick={() => setSelectedCourseId(course.id)}
                   className="hcard p-5 cursor-pointer flex gap-4 hover:scale-[1.01] active:scale-[0.99] transition-all border border-[var(--line)] bg-[var(--card)] rounded-3xl"
                 >
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
                   >
@@ -287,12 +284,12 @@ export default function LearnHubClientPage({
 
                     <div className="mt-4">
                       <div className="flex justify-between items-center mb-1 text-[11px] font-semibold text-[var(--ink-faint)]">
-                        <span>{course.lessonsCount} leçons</span>
+                        <span>{t('lessonsCount', { count: course.lessonsCount })}</span>
                         <span style={{ color: course.accent }}>{course.progress}%</span>
                       </div>
                       <div className="h-1.5 bg-neutral-800/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full" 
+                        <div
+                          className="h-full rounded-full"
                           style={{ width: `${course.progress}%`, background: course.accent }}
                         />
                       </div>
@@ -304,12 +301,12 @@ export default function LearnHubClientPage({
           ) : (
             <div className="p-8 rounded-3xl border border-dashed border-[var(--line)] text-center bg-[var(--card)]">
               <span className="material-symbols-outlined text-[40px] text-[var(--ink-faint)] mb-2">school</span>
-              <p className="text-[14px] text-[var(--ink-soft)] font-medium">Vous n'avez pas encore commencé de formation.</p>
-              <button 
+              <p className="text-[14px] text-[var(--ink-soft)] font-medium">{t('noCourses')}</p>
+              <button
                 onClick={() => setActiveTab(1)}
                 className="mt-3 text-xs font-semibold px-4 py-2 rounded-xl text-white bg-[var(--learn-green)] hover:opacity-90 active:scale-95 transition-all"
               >
-                Explorer les parcours
+                {t('exploreTracks')}
               </button>
             </div>
           )}
@@ -331,7 +328,7 @@ export default function LearnHubClientPage({
                   <span className="material-symbols-outlined text-[20px]">arrow_back</span>
                 </button>
                 <div className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 text-[var(--ink-faint)]">
-                  <span className="cursor-pointer hover:underline" onClick={() => setSelectedCategoryId(null)}>Parcours</span>
+                  <span className="cursor-pointer hover:underline" onClick={() => setSelectedCategoryId(null)}>{t('tracks')}</span>
                   <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                   <span className="text-[var(--ink)]">{activeCategory?.title}</span>
                 </div>
@@ -348,12 +345,12 @@ export default function LearnHubClientPage({
               {categoryCourses.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {categoryCourses.map((course) => (
-                    <div 
-                       key={course.id}
-                       onClick={() => setSelectedCourseId(course.id)}
-                       className="hcard p-5 cursor-pointer flex gap-4 hover:scale-[1.01] active:scale-[0.99] transition-all border border-[var(--line)] bg-[var(--card)] rounded-3xl"
+                    <div
+                      key={course.id}
+                      onClick={() => setSelectedCourseId(course.id)}
+                      className="hcard p-5 cursor-pointer flex gap-4 hover:scale-[1.01] active:scale-[0.99] transition-all border border-[var(--line)] bg-[var(--card)] rounded-3xl"
                     >
-                      <div 
+                      <div
                         className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
                       >
@@ -363,7 +360,7 @@ export default function LearnHubClientPage({
                         <div className="flex justify-between items-start gap-2">
                           <h3 className="font-bold text-[14.5px] text-[var(--ink)] truncate">{course.title}</h3>
                           {course.progress > 0 && (
-                            <span 
+                            <span
                               className="text-[11px] font-bold px-2 py-0.5 rounded-md"
                               style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
                             >
@@ -373,7 +370,7 @@ export default function LearnHubClientPage({
                         </div>
                         <p className="text-[12px] text-[var(--ink-soft)] mt-1.5 line-clamp-2 leading-relaxed">{course.desc}</p>
                         <div className="mt-3 flex justify-between items-center text-[11px] text-[var(--ink-faint)] font-medium">
-                          <span>{course.lessonsCount} leçons</span>
+                          <span>{t('lessonsCount', { count: course.lessonsCount })}</span>
                           <span>{course.duration}</span>
                         </div>
                       </div>
@@ -382,25 +379,25 @@ export default function LearnHubClientPage({
                 </div>
               ) : (
                 <div className="p-8 text-center text-xs text-[var(--ink-soft)] bg-[var(--card)] border border-[var(--line)] rounded-3xl">
-                  Aucune formation trouvée.
+                  {t('noCategory')}
                 </div>
               )}
             </div>
           ) : (
             /* Liste des catégories (Parcours) */
             <div>
-              <h2 className="text-lg font-bold mb-4 text-[var(--ink)]">Nos parcours pédagogiques</h2>
+              <h2 className="text-lg font-bold mb-4 text-[var(--ink)]">Our learning tracks</h2>
               <div className="flex flex-col gap-4">
                 {initialCategories.map((cat) => {
                   const count = initialCourses.filter((c) => c.category === cat.id).length;
                   return (
-                    <div 
+                    <div
                       key={cat.id}
                       onClick={() => setSelectedCategoryId(cat.id)}
                       className="p-5 cursor-pointer border border-[var(--line)] bg-[var(--card)] rounded-3xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-5"
                     >
                       <div className="flex items-start gap-4 min-w-0">
-                        <div 
+                        <div
                           className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ background: `color-mix(in srgb, ${cat.accent} 15%, transparent)`, color: cat.accent }}
                         >
@@ -413,7 +410,7 @@ export default function LearnHubClientPage({
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-neutral-800/5 text-[var(--ink-soft)]">
-                          {count} formations
+                          {count} courses
                         </span>
                         <span className="material-symbols-outlined text-[18px] text-[var(--ink-faint)]">chevron_right</span>
                       </div>
@@ -430,13 +427,13 @@ export default function LearnHubClientPage({
       {!selectedCourse && activeTab === 2 && (
         <div className="certificates-tab animate-fadeIn p-6 rounded-3xl border border-[var(--line)] bg-[var(--card)] text-center">
           <span className="material-symbols-outlined text-[48px] text-[var(--brand-gold)] mb-3">workspace_premium</span>
-          <h2 className="font-bold text-lg text-[var(--ink)] mb-1.5">Certifications Coopératives</h2>
+          <h2 className="font-bold text-lg text-[var(--ink)] mb-1.5">{t('certificationsTitle')}</h2>
           <p className="text-[13px] text-[var(--ink-soft)] leading-relaxed max-w-md mx-auto mb-4">
-            Validez vos compétences sous le standard souverain ALA. Terminez n'importe quelle formation à 100% pour obtenir votre certificat d'accréditation.
+            {t('certificationsBody')}
           </p>
           <div className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl bg-neutral-800/5 text-[var(--ink-soft)] border border-[var(--line)]">
             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            0 certificat actif
+            {t('certCount')}
           </div>
         </div>
       )}

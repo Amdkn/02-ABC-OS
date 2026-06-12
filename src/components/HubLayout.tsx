@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { HUB_CONFIG, INITIAL_DATA } from '@/data/mockData';
 import { Avatar } from './Avatar';
 
@@ -26,6 +27,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   activeTab: controlledActiveTab,
   onTabChange,
 }) => {
+  const tCommon = useTranslations('common');
+  const tHub = useTranslations(`hubs.${hubKey}`);
   const H = HUB_CONFIG[hubKey];
   const [localActiveTab, setLocalActiveTab] = useState(0);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
@@ -48,11 +51,11 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
   return (
     <div className="min-h-screen w-full relative bg-[var(--bg-2)]">
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] min-h-screen">
-        
+
         {/* SIDEBAR RAIL (Desktop Only) */}
         <aside className="hidden md:flex sticky top-0 h-screen p-[24px_18px] bg-[var(--bg)] border-r border-[var(--line)] flex-col gap-[6px]">
           <div className="brandmark flex items-center gap-[11px] pb-[20px] px-[8px]">
-            <div className="logo w-[38px] height-[38px] rounded-[12px] bg-gradient-to-br from-[var(--primary)] to-[var(--brand-gold)] grid place-items-center text-[#1f1a17] font-bold text-[18px]">
+            <div className="logo w-[38px] h-[38px] rounded-[12px] bg-gradient-to-br from-[var(--primary)] to-[var(--brand-gold)] grid place-items-center text-[#1f1a17] font-bold text-[18px]">
               A
             </div>
             <div>
@@ -60,30 +63,30 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
               <s className="text-[11px] text-[var(--ink-faint)] block no-underline">African Business Co-ops</s>
             </div>
           </div>
-          
+
           <Link href="/" className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold">
             <span className="material-symbols-outlined">dashboard</span>
-            Dashboard
+            {tCommon('dashboard')}
           </Link>
           <Link href="/community" className={`navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold ${hubKey === 'community' ? 'on' : ''}`}>
             <span className="material-symbols-outlined">groups</span>
-            Community
+            {tCommon('community')}
           </Link>
           <Link href="/learn" className={`navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold ${hubKey === 'learn' ? 'on' : ''}`}>
             <span className="material-symbols-outlined">school</span>
-            Learn
+            {tCommon('learn')}
           </Link>
           <Link href="/build-hub" className={`navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold ${hubKey === 'build' ? 'on' : ''}`}>
             <span className="material-symbols-outlined">construction</span>
-            Build
+            {tCommon('build')}
           </Link>
           <Link href="/brand" className={`navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold ${hubKey === 'brand' ? 'on' : ''}`}>
             <span className="material-symbols-outlined">verified</span>
-            Brand
+            {tCommon('brand')}
           </Link>
-          
+
           <div className="flex-1"></div>
-          
+
           <div className="me2 flex items-center gap-[10px] p-[10px] rounded-[13px] border border-[var(--line)]">
             <Avatar initials={data.member.initials} color={data.member.tint} className="av w-[38px] h-[38px]" />
             <div className="min-w-0">
@@ -95,7 +98,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
 
         {/* MAIN HUB AREA */}
         <main className="flex-1 pb-32">
-          
+
           {/* Header Mobile & Desktop */}
           <div className="appbar flex items-center p-[10px_18px_6px] md:p-6 md:pb-3 border-b md:border-b-0 border-[var(--line)] bg-[var(--bg)] md:bg-transparent">
             <Link href="/" className="icbtn backbtn flex items-center justify-center tap">
@@ -104,7 +107,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
             <div className="ml-[12px] font-bold text-[16px] md:text-lg text-[var(--ink)]">
               {H.name} Hub
             </div>
-            <button className="icbtn ml-auto tap flex items-center justify-center" aria-label="Réglages">
+            <button className="icbtn ml-auto tap flex items-center justify-center" aria-label="Settings">
               <span className="material-symbols-outlined">tune</span>
             </button>
           </div>
@@ -112,9 +115,9 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
           {/* Hub Title Info */}
           <div className="hubhead px-6 py-4">
             <div className="eyebrow font-bold text-[11px] tracking-widest text-[var(--c)]" style={{ '--c': H.c } as React.CSSProperties}>
-              {H.label}
+              {tHub('eyebrow')}
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-[var(--ink)] mt-1">{H.name}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-[var(--ink)] mt-1">{tHub('title')}</h1>
           </div>
 
           {/* Search bar */}
@@ -159,24 +162,24 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
       {/* Mobile Bottom Navigation */}
       <nav className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4 p-[9px_14px_env(safe-area-inset-bottom)]">
         <Link href="/community" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'community' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'community' ? 'var(--primary)' : undefined } as React.CSSProperties}>
-          <span className="material-symbols-outlined text-[25px]">groups</span>Community
+          <span className="material-symbols-outlined text-[25px]">groups</span>{tCommon('community')}
         </Link>
         <Link href="/learn" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'learn' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'learn' ? 'var(--primary)' : undefined } as React.CSSProperties}>
-          <span className="material-symbols-outlined text-[25px]">school</span>Learn
+          <span className="material-symbols-outlined text-[25px]">school</span>{tCommon('learn')}
         </Link>
         <Link href="/build-hub" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'build' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'build' ? 'var(--primary)' : undefined } as React.CSSProperties}>
-          <span className="material-symbols-outlined text-[25px]">construction</span>Build
+          <span className="material-symbols-outlined text-[25px]">construction</span>{tCommon('build')}
         </Link>
         <Link href="/brand" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'brand' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'brand' ? 'var(--primary)' : undefined } as React.CSSProperties}>
-          <span className="material-symbols-outlined text-[25px]">verified</span>Brand
+          <span className="material-symbols-outlined text-[25px]">verified</span>{tCommon('brand')}
         </Link>
       </nav>
 
       {/* Mobile Floating Action Button */}
-      <button 
+      <button
         className="fab tap md:hidden fixed right-[18px] bottom-[92px] z-[7] w-[58px] h-[58px] rounded-[19px] text-white shadow-lg flex items-center justify-center"
         style={{ background: `linear-gradient(150deg, var(--c), color-mix(in srgb, var(--c) 75%, #000))`, '--c': H.c } as React.CSSProperties}
-        aria-label="Action rapide"
+        aria-label={tCommon('ariaQuickAction')}
       >
         <span className="material-symbols-outlined text-[28px]">add</span>
       </button>

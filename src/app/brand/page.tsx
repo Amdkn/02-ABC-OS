@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { createServerClient } from '@/lib/supabase/server';
 import BrandHubClientPage from './BrandHubClientPage';
 
@@ -5,6 +6,7 @@ export const revalidate = 0;
 
 export default async function BrandHubPage() {
   const supabase = await createServerClient();
+  const t = await getTranslations('hubs.brand');
 
   // 1. Récupération de l'organisation par défaut
   const { data: org } = await supabase
@@ -27,7 +29,7 @@ export default async function BrandHubPage() {
   // Fallback si aucune donnée n'est trouvée (par exemple sur prod vide)
   const score = scoreData?.score ?? 85;
   const delta = scoreData?.delta ?? 0;
-  const notes = scoreData?.notes ?? 'Résonance actuelle de votre communauté. Croissance régulière.';
+  const notes = scoreData?.notes ?? t('impactLede');
   const recordedAt = scoreData?.recorded_at ?? null;
 
   return (

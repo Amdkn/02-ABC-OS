@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { getTranslations } from 'next-intl/server';
 import DashboardClientPage from './DashboardClientPage';
 import { AppData } from '@/types';
 
@@ -59,35 +60,37 @@ interface DBFeedItem {
   place?: string | null;
 }
 
-function formatWhen(dateStr: string) {
+function formatWhen(dateStr: string, t: (key: string) => string) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   if (diffHours < 1) {
     const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
-    return `${diffMins} min`;
+    return `${diffMins} ${t('min')}`;
   }
   if (diffHours < 24) {
-    return `${diffHours} h`;
+    return `${diffHours} ${t('h')}`;
   }
-  return 'hier';
+  return t('yesterday');
 }
 
-function formatDue(dateStr: string) {
+function formatDue(dateStr: string, t: (key: string) => string) {
   const diffMs = new Date(dateStr).getTime() - Date.now();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 0) return 'En retard';
+  if (diffHours < 0) return t('overdue');
   if (diffHours < 1) {
     const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
-    return `${diffMins} min`;
+    return `${diffMins} ${t('min')}`;
   }
   if (diffHours < 24) {
-    return 'Demain';
+    return t('tomorrow');
   }
-  return `${Math.floor(diffHours / 24)} jours`;
+  return `${Math.floor(diffHours / 24)} ${t('days')}`;
 }
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
+  const t = await getTranslations('time');
+  const tFallback = await getTranslations('dashboard');
 
   // 1. Récupération de l'organisation Umoja Weavers
   const { data: org } = await supabase
@@ -118,7 +121,7 @@ export default async function DashboardPage() {
   // 3. Extraction du membre principal (Amara Okonkwo)
   const castedMembers = (dbMembers || []) as unknown as DBMember[];
   const defaultMember = castedMembers.find(m => m.name.includes('Amara')) || castedMembers[0] || {
-    name: 'Amara okonkwo',
+    name: tFallback('fallbackMemberName'),
     initials: 'AO',
     tint: 'linear-gradient(150deg,#FFC72C,#E57373)'
   };
@@ -143,19 +146,19 @@ export default async function DashboardPage() {
   const pulse = {
     community: {
       count: `${pulsesMap.community?.threads || 4} discussions`,
-      meta: `${pulsesMap.community?.events || 2} événements à venir · #Legal #Startup actifs`
+      meta: `${pulsesMap.community?.events || 2} events upcoming · #Legal #Startup active`
     },
     learn: {
       course: 'Architect Principles',
       pct: 60,
-      meta: `${pulsesMap.learn?.inProgress || 3} en cours · ${pulsesMap.learn?.completed || 2} terminés`
+      meta: `${pulsesMap.learn?.inProgress || 3} in progress · ${pulsesMap.learn?.completed || 2} completed`
     },
     build: {
       project: spotlightProject?.name || 'Solaris Agri-Coop',
       ms: spotlightProject?.ms || 3,
       msTotal: spotlightProject?.ms_total || 5,
-      meta: 'Prochain : Irrigation solaire',
-      team: Array.isArray(spotlightProject?.team) ? spotlightProject.team.map((t) => [t.name, t.tint] as [string, string]) : []
+      meta: 'Next: Solar irrigation',
+      team: Array.isArray(spotlightProject?.team) ? spotlightProject.team.map((tt) => [tt.name, tt.tint] as [string, string]) : []
     },
     brand: {
       score: pulsesMap.brand?.score || 85,
@@ -168,20 +171,20 @@ export default async function DashboardPage() {
     hub: item.hub,
     t: item.title,
     d: item.description || '',
-    due: item.due_at ? formatDue(item.due_at) : null,
+    due: item.due_at ? formatDue(item.due_at, t) : null,
     urgent: item.urgent
   }));
 
   // 6. Reconstruction du Spotlight
   const spotlight = {
     name: umojaProject?.name || 'Umoja Weavers',
-    tag: umojaProject?.tag || 'PROJET VEDETTE',
-    desc: umojaProject?.description || 'Collectif textile · teinture naturelle indigo',
+    tag: umojaProject?.tag || 'FEATURED PROJECT',
+    desc: umojaProject?.description || 'Textile collective · natural indigo dyeing',
     place: umojaProject?.place || 'Nairobi, Kenya',
     ms: umojaProject?.ms || 4,
     msTotal: umojaProject?.ms_total || 6,
     pct: umojaProject?.pct || 67,
-    team: Array.isArray(umojaProject?.team) ? umojaProject.team.map((t) => [t.name, t.tint] as [string, string]) : []
+    team: Array.isArray(umojaProject?.team) ? umojaProject.team.map((tt) => [tt.name, tt.tint] as [string, string]) : []
   };
 
   // 7. Reconstruction du Feed d'activités
@@ -191,7 +194,7 @@ export default async function DashboardPage() {
     hub: item.hub,
     what: item.what,
     detail: item.detail || '',
-    when: formatWhen(item.created_at),
+    when: formatWhen(item.created_at, t),
     place: item.place || ''
   }));
 

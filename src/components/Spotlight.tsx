@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { SpotlightProject } from '@/types';
 import { Avatar } from './Avatar';
 
@@ -8,6 +11,7 @@ interface SpotlightProps {
 }
 
 export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
+  const t = useTranslations('hubs.build');
   return (
     <Link href="/build-hub" className="spot tap" style={{ display: 'block', textDecoration: 'none' }}>
       <div className="ph">
@@ -25,10 +29,10 @@ export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
         </div>
         <button
           className="like pill"
-          aria-label="Suivre"
+          aria-label="Follow"
           onClick={(e) => {
             e.preventDefault();
-            // action de like
+            // like action
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>favorite</span>
@@ -52,7 +56,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
                 color: 'rgba(251,243,228,.72)',
               }}
             >
-              <span>Milestones</span>
+              <span>{t('milestonesProgress')}</span>
               <b style={{ color: '#fff' }}>
                 {project.ms} / {project.msTotal}
               </b>
@@ -67,8 +71,8 @@ export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
             </div>
           </div>
           <div className="stack">
-            {project.team.map((t, idx) => (
-              <Avatar key={idx} initials={t[0]} color={t[1]} className="av" />
+            {project.team.map((tm, idx) => (
+              <Avatar key={idx} initials={tm[0]} color={tm[1]} className="av" />
             ))}
           </div>
         </div>
