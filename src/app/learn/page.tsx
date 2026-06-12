@@ -1,404 +1,127 @@
-'use client';
+import { createServerClient } from '@/lib/supabase/server';
+import LearnHubClientPage, { Category, Course } from './LearnHubClientPage';
 
-import React, { useState, useMemo } from 'react';
-import { HubLayout } from '@/components/HubLayout';
-import { LEARN_CATEGORIES, LEARN_COURSES } from '@/data/learnData';
+export const revalidate = 0; // Pas de mise en cache statique pour ce tableau de bord dynamique
 
-export default function LearnHubPage() {
-  const [activeTab, setActiveTab] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+interface DBCategory {
+  id: string;
+  title: string;
+  desc?: string | null;
+  icon?: string | null;
+  accent?: string | null;
+}
 
-  // 1. Filtrage global par recherche
-  const filteredCourses = useMemo(() => {
-    if (!searchQuery.trim()) return LEARN_COURSES;
-    const q = searchQuery.toLowerCase();
-    return LEARN_COURSES.filter(
-      (c) =>
-        c.title.toLowerCase().includes(q) ||
-        c.desc.toLowerCase().includes(q) ||
-        c.sub.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+interface DBChapter {
+  id: string;
+  title: string;
+  duration?: string | null;
+  sort_order: number;
+}
 
-  // 2. Cours en cours (progression > 0)
-  const myCourses = useMemo(() => {
-    return filteredCourses.filter((c) => c.progress > 0);
-  }, [filteredCourses]);
+interface DBModule {
+  id: string;
+  title: string;
+  sort_order: number;
+  chapters?: DBChapter[] | null;
+}
 
-  // 3. Catégorie sélectionnée
-  const activeCategory = useMemo(() => {
-    if (!selectedCategoryId) return null;
-    return LEARN_CATEGORIES.find((cat) => cat.id === selectedCategoryId) || null;
-  }, [selectedCategoryId]);
+interface DBCourse {
+  id: string;
+  category_id: string;
+  title: string;
+  sub?: string | null;
+  desc?: string | null;
+  progress: number;
+  icon?: string | null;
+  accent?: string | null;
+  lessons_count: number;
+  duration?: string | null;
+  sort_order: number;
+  modules?: DBModule[] | null;
+}
 
-  // 4. Cours de la catégorie sélectionnée
-  const categoryCourses = useMemo(() => {
-    if (!selectedCategoryId) return [];
-    return filteredCourses.filter((c) => c.category === selectedCategoryId);
-  }, [selectedCategoryId, filteredCourses]);
+export default async function LearnHubPage() {
+  const supabase = await createServerClient();
 
-  // 5. Cours sélectionné pour affichage des détails
-  const selectedCourse = useMemo(() => {
-    if (!selectedCourseId) return null;
-    return LEARN_COURSES.find((c) => c.id === selectedCourseId) || null;
-  }, [selectedCourseId]);
+  // 1. Récupération des catégories ordonnées
+  const { data: dbCategories } = await supabase
+    .from('learn_categories')
+    .select('*')
+    .order('sort_order', { ascending: true });
 
-  // Configuration des onglets avec compteurs dynamiques
-  const tabs: [string, string | null][] = useMemo(() => {
-    const myCount = LEARN_COURSES.filter((c) => c.progress > 0).length;
-    return [
-      ['Mes cours', myCount > 0 ? String(myCount) : null],
-      ['Parcours', null],
-      ['Certificats', null],
-    ];
-  }, []);
+  // 2. Récupération des cours avec la hiérarchie imbriquée (modules > chapitres)
+  const { data: dbCourses } = await supabase
+    .from('learn_courses')
+    .select(`
+      id,
+      category_id,
+      title,
+      sub,
+      desc,
+      progress,
+      icon,
+      accent,
+      lessons_count,
+      duration,
+      sort_order,
+      modules:learn_modules (
+        id,
+        title,
+        sort_order,
+        chapters:learn_chapters (
+          id,
+          title,
+          duration,
+          sort_order
+        )
+      )
+    `)
+    .order('sort_order', { ascending: true });
 
-  const handleTabChange = (idx: number) => {
-    setActiveTab(idx);
-    setSelectedCourseId(null);
-    setSelectedCategoryId(null);
-    setSearchQuery('');
-  };
+  // 3. Mapping vers les types attendus par l'UI Client
+  const categories: Category[] = ((dbCategories as unknown as DBCategory[]) || []).map((cat) => ({
+    id: cat.id,
+    title: cat.title,
+    desc: cat.desc || '',
+    icon: cat.icon || '',
+    accent: cat.accent || '',
+  }));
+
+  const courses: Course[] = ((dbCourses as unknown as DBCourse[]) || []).map((course) => {
+    // Tri local des modules et chapitres pour garantir l'ordre chronologique
+    const sortedModules = (course.modules || [])
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((mod) => ({
+        id: mod.id,
+        title: mod.title,
+        chapters: (mod.chapters || [])
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((ch) => ({
+            id: ch.id,
+            title: ch.title,
+            duration: ch.duration || '',
+          })),
+      }));
+
+    return {
+      id: course.id,
+      category: course.category_id,
+      title: course.title,
+      sub: course.sub || '',
+      desc: course.desc || '',
+      progress: course.progress,
+      icon: course.icon || '',
+      accent: course.accent || '',
+      lessonsCount: course.lessons_count,
+      duration: course.duration || '',
+      modules: sortedModules,
+    };
+  });
 
   return (
-    <HubLayout
-      hubKey="learn"
-      tabs={tabs}
-      searchPlaceholder={
-        selectedCourseId 
-          ? "Rechercher dans ce cours" 
-          : selectedCategoryId 
-            ? "Rechercher dans cette catégorie" 
-            : "Rechercher cours & sujets"
-      }
-      searchQuery={searchQuery}
-      onSearchChange={setSearchQuery}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-    >
-      {/* ── VUE 1 : DÉTAILS D'UN COURS ────────────────────────────────── */}
-      {selectedCourse && (
-        <div className="course-detail animate-fadeIn">
-          {/* Fil d'Ariane & Retour */}
-          <div className="flex items-center gap-3 mb-5">
-            <button
-              onClick={() => setSelectedCourseId(null)}
-              className="flex items-center justify-center w-9 h-9 rounded-xl border border-[var(--line)] bg-[var(--card)] hover:bg-neutral-800/10 text-[var(--ink-soft)] transition-all active:scale-95"
-            >
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-            </button>
-            <div className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 text-[var(--ink-faint)]">
-              <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId(null); setActiveTab(1); }}>Parcours</span>
-              <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-              {selectedCourse.category === 'structuration' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('structuration'); }}>Structuration</span>
-              )}
-              {selectedCourse.category === 'agentic' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('agentic'); }}>Architecture Agentique</span>
-              )}
-              {selectedCourse.category === 'autodidact' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('autodidact'); }}>Autodidacte</span>
-              )}
-              {selectedCourse.category === 'productivity' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('productivity'); }}>Productivité</span>
-              )}
-              {selectedCourse.category === 'solarpunk' && (
-                <span className="cursor-pointer hover:underline" onClick={() => { setSelectedCourseId(null); setSelectedCategoryId('solarpunk'); }}>Solarpunk</span>
-              )}
-              <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-              <span className="text-[var(--ink)] truncate max-w-[150px]">{selectedCourse.title}</span>
-            </div>
-          </div>
-
-          {/* En-tête du cours */}
-          <div className="p-6 rounded-3xl bg-[var(--card)] border border-[var(--line)] mb-6 flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
-            <div className="flex items-start gap-4 min-w-0">
-              <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `color-mix(in srgb, ${selectedCourse.accent} 15%, transparent)`, color: selectedCourse.accent }}
-              >
-                <span className="material-symbols-outlined text-[28px]">{selectedCourse.icon}</span>
-              </div>
-              <div className="min-w-0">
-                <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: selectedCourse.accent }}>
-                  {selectedCourse.sub}
-                </span>
-                <h1 className="text-xl md:text-2xl font-bold mt-1 text-[var(--ink)]">{selectedCourse.title}</h1>
-                <p className="text-[13.5px] mt-1.5 text-[var(--ink-soft)] leading-relaxed max-w-2xl">{selectedCourse.desc}</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 w-full md:w-auto items-stretch md:items-end">
-              <div className="text-xs font-semibold text-[var(--ink-faint)]">
-                {selectedCourse.lessonsCount} leçons · {selectedCourse.duration}
-              </div>
-              <button 
-                className="btn py-2 px-5 rounded-xl font-semibold text-white shadow-sm hover:opacity-90 active:scale-95 transition-all text-center text-[13.5px]"
-                style={{ background: `linear-gradient(135deg, ${selectedCourse.accent}, color-mix(in srgb, ${selectedCourse.accent} 75%, #000))` }}
-              >
-                {selectedCourse.progress > 0 ? 'Reprendre le cours' : 'Commencer le cours'}
-              </button>
-            </div>
-          </div>
-
-          {/* Barre de progression si déjà commencé */}
-          {selectedCourse.progress > 0 && (
-            <div className="p-4 rounded-2xl bg-[var(--card)] border border-[var(--line)] mb-6 flex items-center justify-between gap-5">
-              <div className="flex-1">
-                <span className="text-xs font-bold text-[var(--ink-faint)] block mb-1">Votre progression</span>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2.5 bg-neutral-800/10 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ width: `${selectedCourse.progress}%`, background: selectedCourse.accent }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold" style={{ color: selectedCourse.accent }}>{selectedCourse.progress}%</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Programme détaillé */}
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--ink)]">
-            <span className="material-symbols-outlined text-[20px] text-[var(--ink-faint)]">toc</span>
-            Programme du cours
-          </h2>
-
-          <div className="flex flex-col gap-4">
-            {selectedCourse.modules.map((mod, modIdx) => (
-              <div key={mod.id} className="rounded-2xl border border-[var(--line)] bg-[var(--card)] overflow-hidden">
-                {/* En-tête Module */}
-                <div className="p-4 border-b border-[var(--line)] bg-neutral-800/5 flex justify-between items-center">
-                  <span className="font-bold text-sm text-[var(--ink)]">{mod.title}</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-neutral-800/10 text-[var(--ink-soft)]">
-                    {mod.chapters.length} chapitres
-                  </span>
-                </div>
-
-                {/* Chapitres */}
-                <div className="divide-y divide-[var(--line)]">
-                  {mod.chapters.map((chap, chapIdx) => {
-                    // Calcul d'une complétion simulée basée sur la progression globale
-                    const isCompleted = selectedCourse.progress > (modIdx * 30 + chapIdx * 12);
-                    return (
-                      <div key={chap.id} className="p-4 flex items-center justify-between gap-4 hover:bg-neutral-800/5 transition-all">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div 
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                              isCompleted 
-                                ? 'text-white' 
-                                : 'border border-[var(--line)] text-[var(--ink-faint)]'
-                            }`}
-                            style={isCompleted ? { background: selectedCourse.accent } : {}}
-                          >
-                            {isCompleted ? (
-                              <span className="material-symbols-outlined text-[14px]">check</span>
-                            ) : (
-                              chapIdx + 1
-                            )}
-                          </div>
-                          <span className="text-[13.5px] font-medium text-[var(--ink)] truncate">{chap.title}</span>
-                        </div>
-                        <span className="text-xs text-[var(--ink-faint)] flex-shrink-0">{chap.duration}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── VUE 2 : ONGLET 0 - MES COURS ──────────────────────────────── */}
-      {!selectedCourse && activeTab === 0 && (
-        <div className="my-courses-tab animate-fadeIn">
-          <div className="hd flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">Mes formations en cours</h2>
-          </div>
-
-          {myCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {myCourses.map((course) => (
-                <div 
-                  key={course.id}
-                  onClick={() => setSelectedCourseId(course.id)}
-                  className="hcard p-5 cursor-pointer flex gap-4 hover:scale-[1.01] active:scale-[0.99] transition-all border border-[var(--line)] bg-[var(--card)] rounded-3xl"
-                >
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
-                  >
-                    <span className="material-symbols-outlined text-[24px]">{course.icon}</span>
-                  </div>
-
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <div className="text-[10px] tracking-wider uppercase font-bold" style={{ color: course.accent }}>
-                        {course.sub}
-                      </div>
-                      <h3 className="text-[15px] font-bold text-[var(--ink)] mt-1 truncate">{course.title}</h3>
-                      <p className="text-[12px] text-[var(--ink-soft)] mt-1 line-clamp-2 leading-relaxed">{course.desc}</p>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="flex justify-between items-center mb-1 text-[11px] font-semibold text-[var(--ink-faint)]">
-                        <span>{course.lessonsCount} leçons</span>
-                        <span style={{ color: course.accent }}>{course.progress}%</span>
-                      </div>
-                      <div className="h-1.5 bg-neutral-800/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full" 
-                          style={{ width: `${course.progress}%`, background: course.accent }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 rounded-3xl border border-dashed border-[var(--line)] text-center bg-[var(--card)]">
-              <span className="material-symbols-outlined text-[40px] text-[var(--ink-faint)] mb-2">school</span>
-              <p className="text-[14px] text-[var(--ink-soft)] font-medium">Vous n'avez pas encore commencé de formation.</p>
-              <button 
-                onClick={() => setActiveTab(1)}
-                className="mt-3 text-xs font-semibold px-4 py-2 rounded-xl text-white bg-[var(--learn-green)] hover:opacity-90 active:scale-95 transition-all"
-              >
-                Explorer les parcours
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── VUE 3 : ONGLET 1 - PARCOURS ───────────────────────────────── */}
-      {!selectedCourse && activeTab === 1 && (
-        <div className="explore-tab animate-fadeIn">
-          {/* Sous-vue : Liste des cours d'une catégorie */}
-          {selectedCategoryId ? (
-            <div>
-              {/* Retour à la liste des catégories */}
-              <div className="flex items-center gap-3 mb-4">
-                <button
-                  onClick={() => setSelectedCategoryId(null)}
-                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-[var(--line)] bg-[var(--card)] hover:bg-neutral-800/10 text-[var(--ink-soft)] transition-all active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                </button>
-                <div className="text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 text-[var(--ink-faint)]">
-                  <span className="cursor-pointer hover:underline" onClick={() => setSelectedCategoryId(null)}>Parcours</span>
-                  <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                  <span className="text-[var(--ink)]">{activeCategory?.title}</span>
-                </div>
-              </div>
-
-              {activeCategory && (
-                <div className="p-5 rounded-3xl bg-[var(--card)] border border-[var(--line)] mb-5" style={{ borderLeft: `4px solid ${activeCategory.accent}` }}>
-                  <h2 className="font-bold text-lg text-[var(--ink)]">{activeCategory.title}</h2>
-                  <p className="text-xs text-[var(--ink-soft)] mt-1">{activeCategory.desc}</p>
-                </div>
-              )}
-
-              {/* Grid des cours de la catégorie */}
-              {categoryCourses.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {categoryCourses.map((course) => (
-                    <div 
-                      key={course.id}
-                      onClick={() => setSelectedCourseId(course.id)}
-                      className="hcard p-5 cursor-pointer flex gap-4 hover:scale-[1.01] active:scale-[0.99] transition-all border border-[var(--line)] bg-[var(--card)] rounded-3xl"
-                    >
-                      <div 
-                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
-                      >
-                        <span className="material-symbols-outlined text-[22px]">{course.icon}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <h3 className="font-bold text-[14.5px] text-[var(--ink)] truncate">{course.title}</h3>
-                          {course.progress > 0 && (
-                            <span 
-                              className="text-[11px] font-bold px-2 py-0.5 rounded-md"
-                              style={{ background: `color-mix(in srgb, ${course.accent} 15%, transparent)`, color: course.accent }}
-                            >
-                              {course.progress}%
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[12px] text-[var(--ink-soft)] mt-1.5 line-clamp-2 leading-relaxed">{course.desc}</p>
-                        <div className="mt-3 flex justify-between items-center text-[11px] text-[var(--ink-faint)] font-medium">
-                          <span>{course.lessonsCount} leçons</span>
-                          <span>{course.duration}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-xs text-[var(--ink-soft)] bg-[var(--card)] border border-[var(--line)] rounded-3xl">
-                  Aucune formation trouvée.
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Liste des catégories (Parcours) */
-            <div>
-              <h2 className="text-lg font-bold mb-4 text-[var(--ink)]">Nos parcours pédagogiques</h2>
-              <div className="flex flex-col gap-4">
-                {LEARN_CATEGORIES.map((cat) => {
-                  const count = LEARN_COURSES.filter((c) => c.category === cat.id).length;
-                  return (
-                    <div 
-                      key={cat.id}
-                      onClick={() => setSelectedCategoryId(cat.id)}
-                      className="p-5 cursor-pointer border border-[var(--line)] bg-[var(--card)] rounded-3xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-between gap-5"
-                    >
-                      <div className="flex items-start gap-4 min-w-0">
-                        <div 
-                          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ background: `color-mix(in srgb, ${cat.accent} 15%, transparent)`, color: cat.accent }}
-                        >
-                          <span className="material-symbols-outlined text-[26px]">{cat.icon}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-[15.5px] text-[var(--ink)]">{cat.title}</h3>
-                          <p className="text-[12.5px] text-[var(--ink-soft)] mt-1 leading-normal">{cat.desc}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-neutral-800/5 text-[var(--ink-soft)]">
-                          {count} formations
-                        </span>
-                        <span className="material-symbols-outlined text-[18px] text-[var(--ink-faint)]">chevron_right</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── VUE 4 : ONGLET 2 - CERTIFICATS ────────────────────────────── */}
-      {!selectedCourse && activeTab === 2 && (
-        <div className="certificates-tab animate-fadeIn p-6 rounded-3xl border border-[var(--line)] bg-[var(--card)] text-center">
-          <span className="material-symbols-outlined text-[48px] text-[var(--brand-gold)] mb-3">workspace_premium</span>
-          <h2 className="font-bold text-lg text-[var(--ink)] mb-1.5">Certifications Coopératives</h2>
-          <p className="text-[13px] text-[var(--ink-soft)] leading-relaxed max-w-md mx-auto mb-4">
-            Validez vos compétences sous le standard souverain ALA. Terminez n'importe quelle formation à 100% pour obtenir votre certificat d'accréditation.
-          </p>
-          <div className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl bg-neutral-800/5 text-[var(--ink-soft)] border border-[var(--line)]">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            0 certificat actif
-          </div>
-        </div>
-      )}
-    </HubLayout>
+    <LearnHubClientPage
+      initialCategories={categories}
+      initialCourses={courses}
+    />
   );
 }

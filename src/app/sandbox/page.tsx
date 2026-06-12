@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { INITIAL_DATA, HUB_CONFIG } from '@/data/mockData';
+import { INITIAL_DATA } from '@/data/mockData';
 import { HubCard } from '@/components/HubCard';
 import { ActionCard } from '@/components/ActionCard';
 import { Spotlight } from '@/components/Spotlight';
@@ -20,7 +20,7 @@ export default function SandboxPage() {
   const [device, setDevice] = useState<DeviceMode>('mobile');
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [appState, setAppState] = useState<AppState>('ready');
-  const [data, setData] = useState(INITIAL_DATA);
+  const [data] = useState(INITIAL_DATA);
 
   // Sync theme to document element
   useEffect(() => {
