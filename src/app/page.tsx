@@ -2,8 +2,11 @@ import { createServerClient } from '@/lib/supabase/server';
 import { getTranslations } from 'next-intl/server';
 import DashboardClientPage from './DashboardClientPage';
 import { AppData } from '@/types';
+import { INITIAL_DATA } from '@/data/mockData';
+import { withTimeout, QueryTimeoutError } from '@/lib/supabase/with-timeout';
+import { unstable_cache } from 'next/cache';
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface HubPulsePayload {
   threads?: number;
@@ -60,7 +63,9 @@ interface DBFeedItem {
   place?: string | null;
 }
 
-function formatWhen(dateStr: string, t: (key: string) => string) {
+const QUERY_TIMEOUT_MS = 3000;
+
+function formatWhen(dateStr: string, t: (key: string) => string): string {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   if (diffHours < 1) {
@@ -73,7 +78,7 @@ function formatWhen(dateStr: string, t: (key: string) => string) {
   return t('yesterday');
 }
 
-function formatDue(dateStr: string, t: (key: string) => string) {
+function formatDue(dateStr: string, t: (key: string) => string): string {
   const diffMs = new Date(dateStr).getTime() - Date.now();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   if (diffHours < 0) return t('overdue');
@@ -87,127 +92,186 @@ function formatDue(dateStr: string, t: (key: string) => string) {
   return `${Math.floor(diffHours / 24)} ${t('days')}`;
 }
 
-export default async function DashboardPage() {
-  const supabase = await createServerClient();
-  const t = await getTranslations('time');
-  const tFallback = await getTranslations('dashboard');
+/** Fallback payload: used when Supabase is slow/down. Renders deterministic mock. */
+function buildFallbackData(): AppData {
+  return { ...INITIAL_DATA };
+}
 
-  // 1. Récupération de l'organisation Umoja Weavers
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('id, name, place')
-    .eq('slug', 'umoja-weavers')
-    .single();
+interface RawDashboardData {
+  members: DBMember[];
+  pulse: DBPulseItem[];
+  actions: DBActionItem[];
+  spotlight: DBSpotlightProject[];
+  feed: DBFeedItem[];
+  coopName: string;
+  coopPlace: string;
+}
 
-  const orgId = org?.id || '11111111-1111-1111-1111-111111111111';
-  const coopName = org?.name || 'Umoja Weavers';
-  const coopPlace = org?.place || 'Nairobi, Kenya';
+/**
+ * Fetches the entire dashboard dataset in one cached call.
+ * unstable_cache dedupes across requests inside a 60s window.
+ * Each underlying query has its own 3s wall-clock timeout.
+ */
+const loadDashboardData = unstable_cache(
+  async (): Promise<RawDashboardData | null> => {
+    try {
+      const supabase = await createServerClient();
 
-  // 2. Requêtes parallèles pour toutes les données du dashboard
-  const [
-    { data: dbMembers },
-    { data: dbPulse },
-    { data: dbActions },
-    { data: dbSpotlight },
-    { data: dbFeed }
-  ] = await Promise.all([
-    supabase.from('members').select('*').eq('org_id', orgId),
-    supabase.from('hub_pulse').select('hub, payload').eq('org_id', orgId),
-    supabase.from('action_items').select('*').eq('org_id', orgId).order('due_at', { ascending: true }),
-    supabase.from('spotlight_projects').select('*').eq('org_id', orgId),
-    supabase.from('feed_items').select('*').eq('org_id', orgId).order('created_at', { ascending: false })
-  ]);
+      const orgRes = await withTimeout(
+        supabase.from('organizations').select('id, name, place').eq('slug', 'umoja-weavers').single(),
+        QUERY_TIMEOUT_MS
+      ).catch(() => null);
+      const org = (orgRes as { data: { id: string; name: string; place: string } | null } | null)?.data || null;
+      const orgId = org?.id || '11111111-1111-1111-1111-111111111111';
+      const coopName = org?.name || 'Umoja Weavers';
+      const coopPlace = org?.place || 'Nairobi, Kenya';
 
-  // 3. Extraction du membre principal (Amara Okonkwo)
-  const castedMembers = (dbMembers || []) as unknown as DBMember[];
-  const defaultMember = castedMembers.find(m => m.name.includes('Amara')) || castedMembers[0] || {
-    name: tFallback('fallbackMemberName'),
-    initials: 'AO',
-    tint: 'linear-gradient(150deg,#FFC72C,#E57373)'
-  };
+      const safeQuery = <T,>(p: PromiseLike<T>): Promise<T> =>
+        withTimeout(p, QUERY_TIMEOUT_MS).catch((err: unknown) => {
+          if (!(err instanceof QueryTimeoutError)) {
+            console.warn('[dashboard] query failed:', err);
+          }
+          return null as T;
+        });
 
-  const member = {
-    name: defaultMember.name.split(' ')[0],
-    full: defaultMember.name,
-    initials: defaultMember.initials || 'AO',
-    tint: defaultMember.tint || 'linear-gradient(150deg,#FFC72C,#E57373)'
-  };
+      const [dbMembers, dbPulse, dbActions, dbSpotlight, dbFeed] = await Promise.all([
+        safeQuery(supabase.from('members').select('*').eq('org_id', orgId)),
+        safeQuery(supabase.from('hub_pulse').select('hub, payload').eq('org_id', orgId)),
+        safeQuery(supabase.from('action_items').select('*').eq('org_id', orgId).order('due_at', { ascending: true })),
+        safeQuery(supabase.from('spotlight_projects').select('*').eq('org_id', orgId)),
+        safeQuery(supabase.from('feed_items').select('*').eq('org_id', orgId).order('created_at', { ascending: false })),
+      ]);
 
-  // 4. Reconstruction du Pulse des Hubs
-  const pulsesMap: Record<string, HubPulsePayload> = {};
-  ((dbPulse as unknown as DBPulseItem[]) || []).forEach(p => {
-    pulsesMap[p.hub] = p.payload;
-  });
+      if (!dbMembers && !dbPulse && !dbActions && !dbSpotlight && !dbFeed) {
+        return null;
+      }
 
-  const castedSpotlight = (dbSpotlight || []) as unknown as DBSpotlightProject[];
-  const spotlightProject = castedSpotlight.find(p => p.name === 'Solaris Agri-Coop') || castedSpotlight[0];
-  const umojaProject = castedSpotlight.find(p => p.name === 'Umoja Weavers') || castedSpotlight[1];
-
-  const pulse = {
-    community: {
-      count: `${pulsesMap.community?.threads || 4} discussions`,
-      meta: `${pulsesMap.community?.events || 2} events upcoming · #Legal #Startup active`
-    },
-    learn: {
-      course: 'Architect Principles',
-      pct: 60,
-      meta: `${pulsesMap.learn?.inProgress || 3} in progress · ${pulsesMap.learn?.completed || 2} completed`
-    },
-    build: {
-      project: spotlightProject?.name || 'Solaris Agri-Coop',
-      ms: spotlightProject?.ms || 3,
-      msTotal: spotlightProject?.ms_total || 5,
-      meta: 'Next: Solar irrigation',
-      team: Array.isArray(spotlightProject?.team) ? spotlightProject.team.map((tt) => [tt.name, tt.tint] as [string, string]) : []
-    },
-    brand: {
-      score: pulsesMap.brand?.score || 85,
-      delta: pulsesMap.brand?.delta || 4
+      return {
+        members: ((dbMembers as { data: unknown } | null)?.data as DBMember[] | null) || [],
+        pulse: ((dbPulse as { data: unknown } | null)?.data as DBPulseItem[] | null) || [],
+        actions: ((dbActions as { data: unknown } | null)?.data as DBActionItem[] | null) || [],
+        spotlight: ((dbSpotlight as { data: unknown } | null)?.data as DBSpotlightProject[] | null) || [],
+        feed: ((dbFeed as { data: unknown } | null)?.data as DBFeedItem[] | null) || [],
+        coopName,
+        coopPlace,
+      };
+    } catch (err: unknown) {
+      console.error('[dashboard] cached fetch failed:', err);
+      return null;
     }
-  };
+  },
+  ['dashboard-umoja-weavers-v1'],
+  { revalidate: 60, tags: ['dashboard'] }
+);
 
-  // 5. Reconstruction des Actions
-  const actions = ((dbActions as unknown as DBActionItem[]) || []).map((item) => ({
-    hub: item.hub,
-    t: item.title,
-    d: item.description || '',
-    due: item.due_at ? formatDue(item.due_at, t) : null,
-    urgent: item.urgent
-  }));
+export default async function DashboardPage() {
+  let initialData: AppData;
 
-  // 6. Reconstruction du Spotlight
-  const spotlight = {
-    name: umojaProject?.name || 'Umoja Weavers',
-    tag: umojaProject?.tag || 'FEATURED PROJECT',
-    desc: umojaProject?.description || 'Textile collective · natural indigo dyeing',
-    place: umojaProject?.place || 'Nairobi, Kenya',
-    ms: umojaProject?.ms || 4,
-    msTotal: umojaProject?.ms_total || 6,
-    pct: umojaProject?.pct || 67,
-    team: Array.isArray(umojaProject?.team) ? umojaProject.team.map((tt) => [tt.name, tt.tint] as [string, string]) : []
-  };
+  try {
+    const t = await getTranslations('time');
+    const tFallback = await getTranslations('dashboard');
 
-  // 7. Reconstruction du Feed d'activités
-  const feed = ((dbFeed as unknown as DBFeedItem[]) || []).map((item) => ({
-    who: item.who,
-    av: (item.av ? [item.av.initials || 'AO', item.av.tint || '#FFC72C'] : ['AO', '#FFC72C']) as [string, string],
-    hub: item.hub,
-    what: item.what,
-    detail: item.detail || '',
-    when: formatWhen(item.created_at, t),
-    place: item.place || ''
-  }));
+    const raw = await loadDashboardData();
 
-  const initialData: AppData = {
-    member,
-    coop: coopName,
-    place: coopPlace,
-    notifications: 4,
-    pulse,
-    actions,
-    spotlight,
-    feed
-  };
+    if (!raw) {
+      initialData = buildFallbackData();
+    } else {
+      const castedMembers = raw.members as DBMember[];
+      const defaultMember = castedMembers.find((m) => m.name.includes('Amara')) || castedMembers[0] || {
+        name: tFallback('fallbackMemberName'),
+        initials: 'AO',
+        tint: 'linear-gradient(150deg,#FFC72C,#E57373)',
+      };
+
+      const member = {
+        name: defaultMember.name.split(' ')[0],
+        full: defaultMember.name,
+        initials: defaultMember.initials || 'AO',
+        tint: defaultMember.tint || 'linear-gradient(150deg,#FFC72C,#E57373)',
+      };
+
+      const pulsesMap: Record<string, HubPulsePayload> = {};
+      raw.pulse.forEach((p) => {
+        pulsesMap[p.hub] = p.payload;
+      });
+
+      const castedSpotlight = raw.spotlight as DBSpotlightProject[];
+      const spotlightProject = castedSpotlight.find((p) => p.name === 'Solaris Agri-Coop') || castedSpotlight[0];
+      const umojaProject = castedSpotlight.find((p) => p.name === 'Umoja Weavers') || castedSpotlight[1];
+
+      const pulse = {
+        community: {
+          count: `${pulsesMap.community?.threads || 4} discussions`,
+          meta: `${pulsesMap.community?.events || 2} events upcoming · #Legal #Startup active`,
+        },
+        learn: {
+          course: 'Architect Principles',
+          pct: 60,
+          meta: `${pulsesMap.learn?.inProgress || 3} in progress · ${pulsesMap.learn?.completed || 2} completed`,
+        },
+        build: {
+          project: spotlightProject?.name || 'Solaris Agri-Coop',
+          ms: spotlightProject?.ms || 3,
+          msTotal: spotlightProject?.ms_total || 5,
+          meta: 'Next: Solar irrigation',
+          team: Array.isArray(spotlightProject?.team)
+            ? spotlightProject.team.map((tt) => [tt.name, tt.tint] as [string, string])
+            : [],
+        },
+        brand: {
+          score: pulsesMap.brand?.score || 85,
+          delta: pulsesMap.brand?.delta || 4,
+        },
+      };
+
+      const actions = raw.actions.map((item) => ({
+        hub: item.hub,
+        t: item.title,
+        d: item.description || '',
+        due: item.due_at ? formatDue(item.due_at, t) : null,
+        urgent: item.urgent,
+      }));
+
+      const spotlight = {
+        name: umojaProject?.name || 'Umoja Weavers',
+        tag: umojaProject?.tag || 'FEATURED PROJECT',
+        desc: umojaProject?.description || 'Textile collective · natural indigo dyeing',
+        place: umojaProject?.place || 'Nairobi, Kenya',
+        ms: umojaProject?.ms || 4,
+        msTotal: umojaProject?.ms_total || 6,
+        pct: umojaProject?.pct || 67,
+        team: Array.isArray(umojaProject?.team)
+          ? umojaProject.team.map((tt) => [tt.name, tt.tint] as [string, string])
+          : [],
+      };
+
+      const feed = raw.feed.map((item) => ({
+        who: item.who,
+        av: (item.av
+          ? [item.av.initials || 'AO', item.av.tint || '#FFC72C']
+          : ['AO', '#FFC72C']) as [string, string],
+        hub: item.hub,
+        what: item.what,
+        detail: item.detail || '',
+        when: formatWhen(item.created_at, t),
+        place: item.place || '',
+      }));
+
+      initialData = {
+        member,
+        coop: raw.coopName,
+        place: raw.coopPlace,
+        notifications: 4,
+        pulse,
+        actions,
+        spotlight,
+        feed,
+      };
+    }
+  } catch (err: unknown) {
+    console.error('[dashboard] fatal fallback:', err);
+    initialData = buildFallbackData();
+  }
 
   return <DashboardClientPage initialData={initialData} />;
 }

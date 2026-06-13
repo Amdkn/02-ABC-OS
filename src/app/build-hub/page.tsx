@@ -5,8 +5,10 @@ import BuildHubClientPage, {
   BuildCategory,
   BuildProject,
 } from './BuildHubClientPage';
+import { withTimeout, QueryTimeoutError } from '@/lib/supabase/with-timeout';
+import { unstable_cache } from 'next/cache';
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 interface DBSpotlightProject {
   id: string;
@@ -28,11 +30,6 @@ interface DBBuildMilestone {
   due_date?: string | null;
 }
 
-// --- D3 DRIFT NOTE (ADR-META-001) ---
-// The spec said 5/17/40/111, but the actual schema (0011_build_hub_v2_seed.sql)
-// has 5 categories / 17 projects / 48 phases / 141 tasks.
-// We follow the schema, not the spec, per D1+D3.
-// Columns: `desc` (quoted lowercase, not `description`), `title` (not `name`).
 interface DBBuildCategory {
   id: string;
   title: string;
@@ -71,127 +68,162 @@ interface DBBuildProject {
   phases: DBBuildPhase[] | null;
 }
 
+const QUERY_TIMEOUT_MS = 3000;
+
+const loadBuildData = unstable_cache(
+  async (): Promise<{
+    orgId: string;
+    projects: DBSpotlightProject[];
+    milestones: DBBuildMilestone[];
+    categories: DBBuildCategory[];
+    catalog: DBBuildProject[];
+  } | null> => {
+    try {
+      const supabase = await createServerClient();
+
+      const safeQuery = <T,>(p: PromiseLike<T>): Promise<T> =>
+        withTimeout(p, QUERY_TIMEOUT_MS).catch((err: unknown) => {
+          if (!(err instanceof QueryTimeoutError)) console.warn('[build-hub] query failed:', err);
+          return null as T;
+        });
+
+      const [orgRes, projectsRes, milestonesRes, categoriesRes, catalogRes] = await Promise.all([
+        safeQuery(supabase.from('organizations').select('id').eq('slug', 'umoja-weavers').single()),
+        safeQuery(supabase.from('spotlight_projects').select('*').limit(100)),
+        safeQuery(supabase.from('build_milestones').select('*').limit(100).order('sort_order', { ascending: true })),
+        safeQuery(supabase.from('build_categories').select('*').order('sort_order', { ascending: true })),
+        safeQuery(
+          supabase
+            .from('build_projects')
+            .select(`
+              id,
+              category_id,
+              title,
+              sub,
+              desc,
+              progress,
+              icon,
+              accent,
+              tasks_count,
+              duration,
+              sort_order,
+              phases:build_phases (
+                id,
+                title,
+                sort_order,
+                tasks:build_tasks (
+                  id,
+                  title,
+                  duration,
+                  sort_order
+                )
+              )
+            `)
+            .order('sort_order', { ascending: true })
+        ),
+      ]);
+
+      if (!orgRes) return null;
+      const orgData = (orgRes as { data: unknown } | null)?.data as { id: string } | null;
+      const orgId = orgData?.id || '11111111-1111-1111-1111-111111111111';
+
+      const projectsData = (projectsRes as { data: unknown } | null)?.data as DBSpotlightProject[] | null;
+      const milestonesData = (milestonesRes as { data: unknown } | null)?.data as DBBuildMilestone[] | null;
+      const categoriesData = (categoriesRes as { data: unknown } | null)?.data as DBBuildCategory[] | null;
+      const catalogData = (catalogRes as { data: unknown } | null)?.data as DBBuildProject[] | null;
+
+      return {
+        orgId,
+        projects: (projectsData as DBSpotlightProject[]) || [],
+        milestones: (milestonesData as DBBuildMilestone[]) || [],
+        categories: (categoriesData as DBBuildCategory[]) || [],
+        catalog: (catalogData as DBBuildProject[]) || [],
+      };
+    } catch (err: unknown) {
+      console.error('[build-hub] cached fetch failed:', err);
+      return null;
+    }
+  },
+  ['build-hub-umoja-weavers-v1'],
+  { revalidate: 60, tags: ['build-hub'] }
+);
+
 export default async function BuildHubPage() {
-  const supabase = await createServerClient();
+  let projects: SpotlightProject[] = [];
+  let milestones: Milestone[] = [];
+  let categories: BuildCategory[] = [];
+  let catalogProjects: BuildProject[] = [];
 
-  // 1. Récupération de l'organisation par défaut (per-tenant, build_milestones only)
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('id')
-    .eq('slug', 'umoja-weavers')
-    .single();
+  try {
+    const raw = await loadBuildData();
+    if (raw) {
+      const orgId = raw.orgId;
 
-  const orgId = org?.id || '11111111-1111-1111-1111-111111111111';
+      projects = raw.projects
+        .filter((p) => !('org_id' in p) || (p as unknown as { org_id?: string }).org_id === orgId)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          tag: p.tag || '',
+          description: p.description || null,
+          place: p.place || null,
+          ms: p.ms,
+          msTotal: p.ms_total,
+          pct: p.pct,
+          team: Array.isArray(p.team) ? p.team : [],
+        }));
 
-  // 2. Récupération des projets de spotlight (per-tenant, D4 coexistence with build_milestones)
-  const { data: dbProjects } = await supabase
-    .from('spotlight_projects')
-    .select('*')
-    .eq('org_id', orgId);
+      milestones = raw.milestones
+        .filter((m) => !('org_id' in m) || (m as unknown as { org_id?: string }).org_id === orgId)
+        .map((m) => ({
+          id: m.id,
+          name: m.name,
+          description: m.description || null,
+          status: m.status,
+          dueDate: m.due_date || null,
+        }));
 
-  // 3. Récupération des jalons de build (per-tenant, ADR-ABCOS-001 D10)
-  const { data: dbMilestones } = await supabase
-    .from('build_milestones')
-    .select('*')
-    .eq('org_id', orgId)
-    .order('sort_order', { ascending: true });
-
-  // 4. Catégories du catalogue partagé Build Hub v2 (D10: SHARED CATALOG, no org_id)
-  const { data: dbCategories } = await supabase
-    .from('build_categories')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  // 5. Hiérarchie imbriquée projets > phases > tâches (D10 shared catalog)
-  //    Mirror du pattern learn/page.tsx mais avec la chaîne FK build_*
-  const { data: dbProjectsCatalog } = await supabase
-    .from('build_projects')
-    .select(`
-      id,
-      category_id,
-      title,
-      sub,
-      desc,
-      progress,
-      icon,
-      accent,
-      tasks_count,
-      duration,
-      sort_order,
-      phases:build_phases (
-        id,
-        title,
-        sort_order,
-        tasks:build_tasks (
-          id,
-          title,
-          duration,
-          sort_order
-        )
-      )
-    `)
-    .order('sort_order', { ascending: true });
-
-  // --- Mapping vers les types attendus par l'UI Client ---
-
-  const projects: SpotlightProject[] = ((dbProjects as unknown as DBSpotlightProject[]) || []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    tag: p.tag || '',
-    description: p.description || null,
-    place: p.place || null,
-    ms: p.ms,
-    msTotal: p.ms_total,
-    pct: p.pct,
-    team: Array.isArray(p.team) ? p.team : [],
-  }));
-
-  const milestones: Milestone[] = ((dbMilestones as unknown as DBBuildMilestone[]) || []).map((m) => ({
-    id: m.id,
-    name: m.name,
-    description: m.description || null,
-    status: m.status,
-    dueDate: m.due_date || null,
-  }));
-
-  const categories: BuildCategory[] = ((dbCategories as unknown as DBBuildCategory[]) || []).map((cat) => ({
-    id: cat.id,
-    title: cat.title,
-    desc: cat.desc || '',
-    icon: cat.icon || '',
-    accent: cat.accent || '',
-  }));
-
-  const catalogProjects: BuildProject[] = ((dbProjectsCatalog as unknown as DBBuildProject[]) || []).map((p) => {
-    // Tri local pour garantir l'ordre chronologique (D4 no self-contradiction)
-    const sortedPhases = (p.phases || [])
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((ph) => ({
-        id: ph.id,
-        title: ph.title,
-        tasks: (ph.tasks || [])
-          .sort((a, b) => a.sort_order - b.sort_order)
-          .map((t) => ({
-            id: t.id,
-            title: t.title,
-            duration: t.duration,
-          })),
+      categories = raw.categories.map((cat) => ({
+        id: cat.id,
+        title: cat.title,
+        desc: cat.desc || '',
+        icon: cat.icon || '',
+        accent: cat.accent || '',
       }));
 
-    return {
-      id: p.id,
-      categoryId: p.category_id,
-      title: p.title,
-      sub: p.sub,
-      desc: p.desc,
-      progress: p.progress,
-      icon: p.icon,
-      accent: p.accent,
-      tasksCount: p.tasks_count,
-      duration: p.duration,
-      phases: sortedPhases,
-    };
-  });
+      catalogProjects = raw.catalog.map((p) => {
+        const sortedPhases = (p.phases || [])
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map((ph) => ({
+            id: ph.id,
+            title: ph.title,
+            tasks: (ph.tasks || [])
+              .sort((a, b) => a.sort_order - b.sort_order)
+              .map((t) => ({
+                id: t.id,
+                title: t.title,
+                duration: t.duration,
+              })),
+          }));
+
+        return {
+          id: p.id,
+          categoryId: p.category_id,
+          title: p.title,
+          sub: p.sub,
+          desc: p.desc,
+          progress: p.progress,
+          icon: p.icon,
+          accent: p.accent,
+          tasksCount: p.tasks_count,
+          duration: p.duration,
+          phases: sortedPhases,
+        };
+      });
+    }
+  } catch (err: unknown) {
+    console.error('[build-hub] fatal fallback:', err);
+  }
 
   return (
     <BuildHubClientPage

@@ -117,13 +117,15 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
 
           {/* Header Mobile & Desktop */}
           <div className="appbar flex items-center p-[10px_18px_6px] md:p-6 md:pb-3 border-b md:border-b-0 border-[var(--line)] bg-[var(--bg)] md:bg-transparent">
-            <Link href="/" className="icbtn backbtn flex items-center justify-center tap">
-              <span className="material-symbols-outlined">arrow_back</span>
+            <Link href="/" aria-label="Back to Dashboard" className="icbtn backbtn flex items-center justify-center tap">
+              <span className="material-symbols-outlined">home</span>
             </Link>
             <div className="ml-[12px] font-bold text-[16px] md:text-lg text-[var(--ink)]">
               {H.name} Hub
             </div>
-            <button className="icbtn ml-auto tap flex items-center justify-center" aria-label="Settings">
+            {/* Per A0 (2026-06-13): the + button lives INSIDE each page (Learn/Build/Brand),
+                not in the layout. Pages add their own Create buttons as needed. */}
+            <button className="icbtn ml-auto tap hidden md:flex items-center justify-center" aria-label="Settings">
               <span className="material-symbols-outlined">tune</span>
             </button>
           </div>
@@ -175,8 +177,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-5 p-[9px_14px_env(safe-area-inset-bottom)]">
+      {/* Mobile Bottom Navigation — 4 items only (no dark mode toggle on mobile) */}
+      <nav aria-label={tCommon('ariaMainNav')} className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4 p-[9px_14px_env(safe-area-inset-bottom)]">
         <Link href="/community" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'community' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'community' ? 'var(--primary)' : undefined } as React.CSSProperties}>
           <span className="material-symbols-outlined text-[25px]">groups</span>{tCommon('community')}
         </Link>
@@ -189,27 +191,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         <Link href="/brand" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'brand' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'brand' ? 'var(--primary)' : undefined } as React.CSSProperties}>
           <span className="material-symbols-outlined text-[25px]">verified</span>{tCommon('brand')}
         </Link>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
-          className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold"
-        >
-          <span className={`material-symbols-outlined text-[25px] ${theme === 'light' ? 'ms-fill' : ''}`}>
-            {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-          </span>
-          {theme === 'dark' ? tTheme('light') : tTheme('dark')}
-        </button>
       </nav>
-
-      {/* Mobile Floating Action Button */}
-      <button
-        className="fab tap md:hidden fixed right-[18px] bottom-[92px] z-[7] w-[58px] h-[58px] rounded-[19px] text-white shadow-lg flex items-center justify-center"
-        style={{ background: `linear-gradient(150deg, var(--c), color-mix(in srgb, var(--c) 75%, #000))`, '--c': H.c } as React.CSSProperties}
-        aria-label={tCommon('ariaQuickAction')}
-      >
-        <span className="material-symbols-outlined text-[28px]">add</span>
-      </button>
     </div>
   );
 };

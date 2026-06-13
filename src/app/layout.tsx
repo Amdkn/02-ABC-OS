@@ -4,6 +4,7 @@ import { Space_Grotesk, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider, type Theme } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "@material-symbols/font-400";
 import "./globals.css";
 
@@ -49,7 +50,9 @@ export default async function RootLayout({
         }}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>
