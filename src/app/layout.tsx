@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Space_Grotesk, Fraunces } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { ThemeProvider, type Theme } from "@/contexts/ThemeContext";
+import "@material-symbols/font-400";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -22,6 +25,10 @@ export const metadata: Metadata = {
   description: "African Business Co-ops Sovereign Operating System — Terracotta & Solarpunk design",
 };
 
+function resolveInitialTheme(cookieValue: string | undefined): Theme {
+  return cookieValue === "dark" ? "dark" : "light";
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -29,16 +36,12 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const cookieStore = await cookies();
+  const initialTheme = resolveInitialTheme(cookieStore.get("theme")?.value);
+  const htmlClassName = initialTheme === "dark" ? "dark" : "";
 
   return (
-    <html lang={locale} className="dark">
-      <head>
-        {/* Material Symbols Outlined stylesheet link */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
-        />
-      </head>
+    <html lang={locale} className={htmlClassName} suppressHydrationWarning>
       <body
         className={`${spaceGrotesk.variable} ${fraunces.variable} antialiased`}
         style={{
@@ -46,7 +49,7 @@ export default async function RootLayout({
         }}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

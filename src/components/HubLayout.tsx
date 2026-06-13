@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { HUB_CONFIG, INITIAL_DATA } from '@/data/mockData';
 import { Avatar } from './Avatar';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HubLayoutProps {
   hubKey: 'community' | 'learn' | 'build' | 'brand';
@@ -29,6 +30,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
 }) => {
   const tCommon = useTranslations('common');
   const tHub = useTranslations(`hubs.${hubKey}`);
+  const tTheme = useTranslations('theme');
+  const { theme, toggleTheme } = useTheme();
   const H = HUB_CONFIG[hubKey];
   const [localActiveTab, setLocalActiveTab] = useState(0);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
@@ -86,6 +89,19 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
           </Link>
 
           <div className="flex-1"></div>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+            title={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+            className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold"
+          >
+            <span className={`material-symbols-outlined ${theme === 'light' ? 'ms-fill' : ''}`}>
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
+            {theme === 'dark' ? tTheme('light') : tTheme('dark')}
+          </button>
 
           <div className="me2 flex items-center gap-[10px] p-[10px] rounded-[13px] border border-[var(--line)]">
             <Avatar initials={data.member.initials} color={data.member.tint} className="av w-[38px] h-[38px]" />
@@ -160,7 +176,7 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4 p-[9px_14px_env(safe-area-inset-bottom)]">
+      <nav className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-5 p-[9px_14px_env(safe-area-inset-bottom)]">
         <Link href="/community" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'community' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'community' ? 'var(--primary)' : undefined } as React.CSSProperties}>
           <span className="material-symbols-outlined text-[25px]">groups</span>{tCommon('community')}
         </Link>
@@ -173,6 +189,17 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         <Link href="/brand" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'brand' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'brand' ? 'var(--primary)' : undefined } as React.CSSProperties}>
           <span className="material-symbols-outlined text-[25px]">verified</span>{tCommon('brand')}
         </Link>
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+          className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold"
+        >
+          <span className={`material-symbols-outlined text-[25px] ${theme === 'light' ? 'ms-fill' : ''}`}>
+            {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+          </span>
+          {theme === 'dark' ? tTheme('light') : tTheme('dark')}
+        </button>
       </nav>
 
       {/* Mobile Floating Action Button */}

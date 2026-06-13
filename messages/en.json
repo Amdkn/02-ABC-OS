@@ -160,5 +160,12 @@
     "brandSlogan": "African Business Co-ops",
     "mobileFrameLabel": "Dashboard (Mobile)",
     "desktopFrameLabel": "Dashboard (Desktop bento)"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
   }
 }

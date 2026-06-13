@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { HubCard } from '@/components/HubCard';
@@ -9,6 +9,7 @@ import { Spotlight } from '@/components/Spotlight';
 import { FeedCard } from '@/components/FeedCard';
 import { Avatar } from '@/components/Avatar';
 import { AppState } from '@/components/ControlDock';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AppData } from '@/types';
 
 interface DashboardClientPageProps {
@@ -20,15 +21,11 @@ export default function DashboardClientPage({
 }: DashboardClientPageProps) {
   const t = useTranslations('dashboard');
   const tCommon = useTranslations('common');
+  const tTheme = useTranslations('theme');
+  const { theme, toggleTheme } = useTheme();
 
   const [appState, setAppState] = useState<AppState>('ready');
   const [data] = useState(initialData);
-  const [isThemeDark, setIsThemeDark] = useState(true);
-
-  // Sync dark class on document element
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isThemeDark);
-  }, [isThemeDark]);
 
   const handleRetry = () => {
     setAppState('loading');
@@ -200,6 +197,19 @@ export default function DashboardClientPage({
 
             <div className="flex-1"></div>
 
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+              title={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+              className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold"
+            >
+              <span className={`material-symbols-outlined ${theme === 'light' ? 'ms-fill' : ''}`}>
+                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+              </span>
+              {theme === 'dark' ? tTheme('light') : tTheme('dark')}
+            </button>
+
             <div className="me2 flex items-center gap-[10px] p-[10px] rounded-[13px] border border-[var(--line)]">
               <Avatar initials={data.member.initials} color={data.member.tint} className="av w-[38px] h-[38px] text-[14px]" />
               <div className="min-w-0">
@@ -323,7 +333,7 @@ export default function DashboardClientPage({
               )}
 
               {/* Mobile bottom nav bar */}
-              <nav className="nav fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4 p-[9px_14px_env(safe-area-inset-bottom)]" aria-label={tCommon('ariaMainNav')}>
+              <nav className="nav fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-5 p-[9px_14px_env(safe-area-inset-bottom)]" aria-label={tCommon('ariaMainNav')}>
                 <Link href="/community" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">
                   <span className="material-symbols-outlined text-[25px]">groups</span>{tCommon('community')}
                 </Link>
@@ -336,6 +346,17 @@ export default function DashboardClientPage({
                 <Link href="/brand" className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold">
                   <span className="material-symbols-outlined text-[25px]">verified</span>{tCommon('brand')}
                 </Link>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+                  className="tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold"
+                >
+                  <span className={`material-symbols-outlined text-[25px] ${theme === 'light' ? 'ms-fill' : ''}`}>
+                    {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+                  </span>
+                  {theme === 'dark' ? tTheme('light') : tTheme('dark')}
+                </button>
               </nav>
 
               <button className="fab tap fixed right-[18px] bottom-[92px] z-[7] w-[58px] h-[58px] rounded-[19px] bg-gradient-to-br from-[var(--primary)] to-[var(--primary-deep)] text-white shadow-lg flex items-center justify-center" aria-label={tCommon('ariaQuickAction')}>
@@ -444,13 +465,6 @@ export default function DashboardClientPage({
             {/* PREVIEW DOCK (Simulator / Sandbox controls) */}
             <div className="fixed bottom-6 right-6 z-50 flex gap-3 bg-[var(--bg-dark)]/90 backdrop-blur-md p-3 border border-[var(--line)] rounded-xl shadow-2xl items-center text-white">
               <span className="text-[10px] uppercase font-bold text-[var(--primary)] tracking-wider px-2">Preview Settings</span>
-              <button
-                onClick={() => setIsThemeDark(!isThemeDark)}
-                className="bg-[var(--card)] hover:bg-neutral-700/50 p-2 rounded-lg text-sm border border-[var(--line)] transition-colors flex items-center gap-1.5"
-              >
-                <span className="material-symbols-outlined text-[18px]">{isThemeDark ? 'light_mode' : 'dark_mode'}</span>
-                {isThemeDark ? tCommon('ariaLightMode') : tCommon('ariaDarkMode')}
-              </button>
               {process.env.NODE_ENV !== 'production' && (
                 <Link
                   href="/sandbox"
