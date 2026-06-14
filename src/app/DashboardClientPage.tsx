@@ -197,26 +197,47 @@ export default function DashboardClientPage({
 
             <div className="flex-1"></div>
 
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
-              title={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
-              className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[13px] text-[var(--ink-soft)] text-[14.5px] font-semibold"
-            >
-              <span className={`material-symbols-outlined ${theme === 'light' ? 'ms-fill' : ''}`}>
-                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-              </span>
-              {theme === 'dark' ? tTheme('light') : tTheme('dark')}
-            </button>
-
-            <div className="me2 flex items-center gap-[10px] p-[10px] rounded-[13px] border border-[var(--line)]">
-              <Avatar initials={data.member.initials} color={data.member.tint} className="av w-[38px] h-[38px] text-[14px]" />
-              <div className="min-w-0">
-                <div className="text-[13.5px] font-bold truncate">{data.member.full}</div>
-                <div className="text-[11px] text-[var(--ink-faint)] truncate">{data.coop} · {data.place.split(',')[0]}</div>
+            {/* Profile toggle: click avatar to expand panel with dark mode + sign-out (tour 4, 2026-06-14) */}
+            <details className="profile-toggle group">
+              <summary
+                className="me2 tap flex items-center gap-[10px] p-[10px] rounded-[13px] border border-[var(--line)] cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+                aria-label={`${data.member.full} profile menu`}
+              >
+                <Avatar initials={data.member.initials} color={data.member.tint} className="av w-[38px] h-[38px] text-[14px]" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13.5px] font-bold truncate">{data.member.full}</div>
+                  <div className="text-[11px] text-[var(--ink-faint)] truncate">{data.coop} · {data.place.split(',')[0]}</div>
+                </div>
+                <span
+                  className="material-symbols-outlined text-[var(--ink-faint)] text-[20px] transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                >
+                  expand_more
+                </span>
+              </summary>
+              <div className="profile-panel mt-[6px] p-[8px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] flex flex-col gap-[4px]">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  aria-label={theme === 'dark' ? tTheme('switchToLight') : tTheme('switchToDark')}
+                  className="navitem tap flex items-center gap-[12px] p-[11px_12px] rounded-[11px] text-[var(--ink-soft)] text-[14px] font-semibold w-full"
+                >
+                  <span className={`material-symbols-outlined ${theme === 'light' ? 'ms-fill' : ''}`}>
+                    {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+                  </span>
+                  {theme === 'dark' ? tTheme('light') : tTheme('dark')}
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  aria-label="Sign out (coming soon)"
+                  className="navitem flex items-center gap-[12px] p-[11px_12px] rounded-[11px] text-[var(--ink-faint)] text-[14px] font-semibold w-full opacity-60 cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined">logout</span>
+                  Sign out
+                </button>
               </div>
-            </div>
+            </details>
           </aside>
 
           {/* MAIN CONTAINER */}
@@ -475,19 +496,7 @@ export default function DashboardClientPage({
               )}
             </div>
 
-            {/* PREVIEW DOCK (Simulator / Sandbox controls) */}
-            <div className="fixed bottom-6 right-6 z-50 flex gap-3 bg-[var(--bg-dark)]/90 backdrop-blur-md p-3 border border-[var(--line)] rounded-xl shadow-2xl items-center text-white">
-              <span className="text-[10px] uppercase font-bold text-[var(--primary)] tracking-wider px-2">Preview Settings</span>
-              {process.env.NODE_ENV !== 'production' && (
-                <Link
-                  href="/sandbox"
-                  className="bg-[var(--primary)] hover:bg-[var(--primary-deep)] text-[#1f1a17] font-bold px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[18px]">smartphone</span>
-                  {tCommon('sandbox')}
-                </Link>
-              )}
-            </div>
+            {/* Preview Settings dock removed (tour 4, 2026-06-14) */}
 
           </div>
         </div>

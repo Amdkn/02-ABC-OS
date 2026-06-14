@@ -5,13 +5,18 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider, type Theme } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import "@material-symbols/font-400";
+// Tour 4 perf (2026-06-14): outlined-only subset instead of the full
+// @material-symbols/font-400 index (which loads 3 woff2 fonts eagerly).
+// Rounded/Sharp variants are not used in the UI, so skip them.
+import "@material-symbols/font-400/outlined.css";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
 });
 
 const fraunces = Fraunces({
@@ -19,6 +24,8 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   style: ["normal", "italic"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {

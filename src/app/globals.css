@@ -474,5 +474,15 @@ body.view-desktop .stage { place-items: start stretch; padding: 0; }
 
 .backbtn { display: inline-flex; align-items: center; gap: 4px; }
 
+/* ---------- Profile toggle (tour 4, 2026-06-14) ---------- */
+.profile-toggle > summary { list-style: none; }
+.profile-toggle > summary::-webkit-details-marker { display: none; }
+.profile-toggle[open] > summary { border-color: var(--line-strong); }
+.profile-panel { animation: profilePanelIn 160ms ease-out; }
+@keyframes profilePanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 1080px) { .bento { grid-template-columns: repeat(2, 1fr); } .bento .b-spot, .bento .b-actions, .bento .b-feed { grid-column: span 2; } }
 @media (max-width: 920px) { body.view-desktop .deskgrid { grid-template-columns: 1fr; } body.view-desktop .rail { display: none; } }
