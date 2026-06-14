@@ -131,6 +131,28 @@
     "spotlightTitle": "Cooperative spotlight",
     "feedTitle": "Recent activity",
     "crossHubFeedTitle": "Cross-hub activity",
+    "actions": {
+      "title": "Next best actions",
+      "complete_milestone": "Complete the milestone «{title}»",
+      "complete_milestone_detail": "{description}",
+      "complete_module": "Finish the module «{title}»",
+      "complete_module_detail": "{description}",
+      "reply_discussion": "Reply to the discussion {title}",
+      "reply_discussion_detail": "{description}",
+      "strengthen_brand": "Strengthen your Brand Story",
+      "strengthen_brand_detail": "{description}"
+    },
+    "activity": {
+      "title": "Cross-hub activity",
+      "launched_discussion": "{who} {what} — {detail}",
+      "completed_module": "{who} {what} — {detail}",
+      "milestone_validated": "{who} {what} — {detail}",
+      "brand_progressed": "{who} {what} — {detail}"
+    },
+    "spotlight": {
+      "featured": "FEATURED PROJECT",
+      "milestone_progress": "Milestone progress"
+    },
     "syncOk": "Synced",
     "syncOffline": "Offline",
     "syncOfflineCache": "Offline · cache",

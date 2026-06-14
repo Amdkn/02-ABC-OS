@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { FeedItem } from '@/types';
+import { useTranslations } from 'next-intl';
+import { FeedItem, FeedKind } from '@/types';
 import { HUB_CONFIG } from '@/data/mockData';
 import { Avatar } from './Avatar';
 
@@ -9,12 +10,19 @@ interface FeedCardProps {
 }
 
 export const FeedCard: React.FC<FeedCardProps> = ({ item }) => {
+  const t = useTranslations('dashboard.activity');
   const H = HUB_CONFIG[item.hub];
 
-  const getBadgeIcon = (hub: string) => {
+  const getBadgeIcon = (hub: string): string => {
     const m: Record<string, string> = { community: 'forum', learn: 'school', build: 'construction', brand: 'auto_awesome' };
     return m[hub] || 'info';
   };
+
+  const kindKey: FeedKind = item.kind;
+  const values: Record<string, string | number> = {};
+  for (const [k, v] of Object.entries(item.data)) {
+    values[k] = v;
+  }
 
   return (
     <Link href={H.href} className="fi tap" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -27,9 +35,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({ item }) => {
         </div>
       </div>
       <div className="ct">
-        <div className="l">
-          <b>{item.who}</b> {item.what} — {item.detail}
-        </div>
+        <div className="l">{t(kindKey, values)}</div>
         <div className="m">
           <span>{item.when}</span>
           {item.place && (

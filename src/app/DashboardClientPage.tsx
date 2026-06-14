@@ -238,13 +238,18 @@ export default function DashboardClientPage({
                   </div>
                 </div>
                 <div className="right flex items-center gap-[8px]">
-                  <button
-                    onClick={() => setAppState(appState === 'error' ? 'ready' : 'error')}
-                    className={`syncpill tap flex items-center gap-[7px] h-[40px] px-[13px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] text-[12.5px] font-semibold ${appState === 'error' ? 'off' : ''}`}
-                  >
-                    <span className="led w-[8px] h-[8px] rounded-full bg-[var(--ok)]"></span>
-                    {appState === 'error' ? t('syncOffline') : t('syncOk')}
-                  </button>
+                  {/* Bug 17: live region wrapping the sync pill so screen readers
+                      announce "Synced" / "Offline cache" state changes (D1 receipt). */}
+                  <div role="alert" aria-live="polite" className="contents">
+                    <button
+                      onClick={() => setAppState(appState === 'error' ? 'ready' : 'error')}
+                      aria-label="Synchronization status: OK"
+                      className={`syncpill tap flex items-center gap-[7px] h-[40px] px-[13px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] text-[12.5px] font-semibold ${appState === 'error' ? 'off' : ''}`}
+                    >
+                      <span className="led w-[8px] h-[8px] rounded-full bg-[var(--ok)]"></span>
+                      {appState === 'error' ? t('syncOffline') : t('syncOk')}
+                    </button>
+                  </div>
                   <button className="icbtn tap w-[40px] h-[40px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] flex items-center justify-center relative" aria-label={tCommon('ariaNotifications')}>
                     <span className="material-symbols-outlined text-[22px]">notifications</span>
                     <span className="dot-badge"></span>
@@ -300,7 +305,10 @@ export default function DashboardClientPage({
                   <div className="sec px-[20px] mt-[22px]">
                     <div className="sechd flex items-baseline justify-between mb-[12px]">
                       <h2 className="text-[18px] font-bold">{t('todayTitle')}</h2>
-                      <span className="more text-[12.5px] font-bold text-[var(--primary)]">
+                      <span
+                        className="more text-[12.5px] font-bold text-[var(--primary)]"
+                        aria-label={`${data.actions.length} next best actions pending`}
+                      >
                         {t('todayActions', { count: data.actions.length })}
                       </span>
                     </div>
@@ -378,13 +386,18 @@ export default function DashboardClientPage({
                   </div>
                 </div>
                 <div className="right ml-auto flex items-center gap-[10px]">
-                  <button
-                    onClick={() => setAppState(appState === 'error' ? 'ready' : 'error')}
-                    className={`syncpill tap flex items-center gap-[7px] h-[40px] px-[13px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] text-[12.5px] font-semibold ${appState === 'error' ? 'off' : ''}`}
-                  >
-                    <span className="led w-[8px] h-[8px] rounded-full bg-[var(--ok)]"></span>
-                    {appState === 'error' ? t('syncOfflineCache') : t('syncOk')}
-                  </button>
+                  {/* Bug 17: live region wrapping the desktop sync pill so screen
+                      readers announce "Synced" / "Offline cache" state changes. */}
+                  <div role="alert" aria-live="polite" className="contents">
+                    <button
+                      onClick={() => setAppState(appState === 'error' ? 'ready' : 'error')}
+                      aria-label="Synchronization status: OK"
+                      className={`syncpill tap flex items-center gap-[7px] h-[40px] px-[13px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] text-[12.5px] font-semibold ${appState === 'error' ? 'off' : ''}`}
+                    >
+                      <span className="led w-[8px] h-[8px] rounded-full bg-[var(--ok)]"></span>
+                      {appState === 'error' ? t('syncOfflineCache') : t('syncOk')}
+                    </button>
+                  </div>
                   <button className="icbtn tap w-[40px] h-[40px] rounded-[13px] border border-[var(--line)] bg-[var(--card)] flex items-center justify-center relative" aria-label={tCommon('ariaNotifications')}>
                     <span className="material-symbols-outlined text-[22px]">notifications</span>
                     <span className="dot-badge"></span>

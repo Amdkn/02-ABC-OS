@@ -28,17 +28,31 @@ export interface HubPulse {
   };
 }
 
+export type HubKey = 'community' | 'learn' | 'build' | 'brand';
+
+export type ActionKind =
+  | 'complete_milestone'
+  | 'complete_module'
+  | 'reply_discussion'
+  | 'strengthen_brand';
+
+export type FeedKind =
+  | 'launched_discussion'
+  | 'completed_module'
+  | 'milestone_validated'
+  | 'brand_progressed';
+
 export interface ActionItem {
-  hub: 'community' | 'learn' | 'build' | 'brand';
-  t: string;
-  d: string;
+  hub: HubKey;
+  kind: ActionKind;
+  data: Record<string, string | number>;
   due: string | null;
   urgent?: boolean;
 }
 
 export interface SpotlightProject {
   name: string;
-  tag: string;
+  tagKey: 'featured';
   desc: string;
   place: string;
   ms: number;
@@ -48,11 +62,10 @@ export interface SpotlightProject {
 }
 
 export interface FeedItem {
-  who: string;
   av: [string, string];
-  hub: 'community' | 'learn' | 'build' | 'brand';
-  what: string;
-  detail: string;
+  hub: HubKey;
+  kind: FeedKind;
+  data: Record<string, string | number>;
   when: string;
   place: string | null;
 }

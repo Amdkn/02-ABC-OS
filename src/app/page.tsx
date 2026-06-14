@@ -92,9 +92,41 @@ function formatDue(dateStr: string, t: (key: string) => string): string {
   return `${Math.floor(diffHours / 24)} ${t('days')}`;
 }
 
-/** Fallback payload: used when Supabase is slow/down. Renders deterministic mock. */
-function buildFallbackData(): AppData {
-  return { ...INITIAL_DATA };
+/**
+ * Fallback payload: used when Supabase is slow/down. Renders deterministic mock.
+ * Replaces hardcoded FR date strings in INITIAL_DATA with locale-aware
+ * `t('time.*')` values so EN/FR render correctly.
+ */
+function buildFallbackData(t: (key: string) => string): AppData {
+  // Fixed offsets from "now" for deterministic fallback (in milliseconds).
+  const now = Date.now();
+  const min12 = new Date(now - 12 * 60 * 1000).toISOString();
+  const h2 = new Date(now - 2 * 60 * 60 * 1000).toISOString();
+  const h4 = new Date(now - 4 * 60 * 60 * 1000).toISOString();
+  const h26 = new Date(now - 26 * 60 * 60 * 1000).toISOString();
+  const tomorrow = new Date(now + 24 * 60 * 60 * 1000).toISOString();
+
+  return {
+    ...INITIAL_DATA,
+    actions: INITIAL_DATA.actions.map((a, idx) => {
+      // Mirror the action ordering in mockData.ts:
+      // 0=build urgent (tomorrow), 1=learn (12 min), 2=community (null), 3=brand (null)
+      let due: string | null = a.due;
+      if (idx === 0) due = formatDue(tomorrow, t);
+      else if (idx === 1) due = formatWhen(min12, t);
+      else if (a.due !== null) due = formatDue(a.due, t);
+      return { ...a, due };
+    }),
+    feed: INITIAL_DATA.feed.map((f, idx) => {
+      // Mirror the feed ordering in mockData.ts:
+      // 0=community (2h), 1=learn (4h), 2=build (yesterday), 3=brand (yesterday)
+      let when: string = f.when;
+      if (idx === 0) when = formatWhen(h2, t);
+      else if (idx === 1) when = formatWhen(h4, t);
+      else if (idx === 2 || idx === 3) when = formatWhen(h26, t);
+      return { ...f, when };
+    }),
+  };
 }
 
 interface RawDashboardData {
@@ -174,7 +206,7 @@ export default async function DashboardPage() {
     const raw = await loadDashboardData();
 
     if (!raw) {
-      initialData = buildFallbackData();
+      initialData = buildFallbackData(t);
     } else {
       const castedMembers = raw.members as DBMember[];
       const defaultMember = castedMembers.find((m) => m.name.includes('Amara')) || castedMembers[0] || {
@@ -224,17 +256,28 @@ export default async function DashboardPage() {
         },
       };
 
-      const actions = raw.actions.map((item) => ({
-        hub: item.hub,
-        t: item.title,
-        d: item.description || '',
-        due: item.due_at ? formatDue(item.due_at, t) : null,
-        urgent: item.urgent,
-      }));
+      const actions = raw.actions.map((item) => {
+        // Map hub → i18n kind for the action template. The raw DB doesn't carry
+        // a `kind` discriminator, so we infer it from the hub (build→complete_milestone,
+        // learn→complete_module, community→reply_discussion, brand→strengthen_brand).
+        const hubToKind: Record<string, 'complete_milestone' | 'complete_module' | 'reply_discussion' | 'strengthen_brand'> = {
+          build: 'complete_milestone',
+          learn: 'complete_module',
+          community: 'reply_discussion',
+          brand: 'strengthen_brand',
+        };
+        return {
+          hub: item.hub,
+          kind: hubToKind[item.hub] ?? 'strengthen_brand',
+          data: { title: item.title, description: item.description || '' },
+          due: item.due_at ? formatDue(item.due_at, t) : null,
+          urgent: item.urgent,
+        };
+      });
 
       const spotlight = {
         name: umojaProject?.name || 'Umoja Weavers',
-        tag: umojaProject?.tag || 'FEATURED PROJECT',
+        tagKey: 'featured' as const,
         desc: umojaProject?.description || 'Textile collective · natural indigo dyeing',
         place: umojaProject?.place || 'Nairobi, Kenya',
         ms: umojaProject?.ms || 4,
@@ -245,17 +288,24 @@ export default async function DashboardPage() {
           : [],
       };
 
-      const feed = raw.feed.map((item) => ({
-        who: item.who,
-        av: (item.av
-          ? [item.av.initials || 'AO', item.av.tint || '#FFC72C']
-          : ['AO', '#FFC72C']) as [string, string],
-        hub: item.hub,
-        what: item.what,
-        detail: item.detail || '',
-        when: formatWhen(item.created_at, t),
-        place: item.place || '',
-      }));
+      const feed = raw.feed.map((item) => {
+        const hubToFeedKind: Record<string, 'launched_discussion' | 'completed_module' | 'milestone_validated' | 'brand_progressed'> = {
+          community: 'launched_discussion',
+          learn: 'completed_module',
+          build: 'milestone_validated',
+          brand: 'brand_progressed',
+        };
+        return {
+          av: (item.av
+            ? [item.av.initials || 'AO', item.av.tint || '#FFC72C']
+            : ['AO', '#FFC72C']) as [string, string],
+          hub: item.hub,
+          kind: hubToFeedKind[item.hub] ?? 'launched_discussion',
+          data: { who: item.who, what: item.what, detail: item.detail || '' },
+          when: formatWhen(item.created_at, t),
+          place: item.place || '',
+        };
+      });
 
       initialData = {
         member,
@@ -270,7 +320,15 @@ export default async function DashboardPage() {
     }
   } catch (err: unknown) {
     console.error('[dashboard] fatal fallback:', err);
-    initialData = buildFallbackData();
+    // Outer catch — `t` may not be in scope if getTranslations threw first.
+    // Build a minimal fallback with English keys directly.
+    initialData = buildFallbackData((k: string) => {
+      const map: Record<string, string> = {
+        min: 'min', h: 'h', yesterday: 'yesterday', tomorrow: 'Tomorrow',
+        overdue: 'Overdue', days: 'days', justNow: 'just now', today: 'Today',
+      };
+      return map[k] ?? k;
+    });
   }
 
   return <DashboardClientPage initialData={initialData} />;

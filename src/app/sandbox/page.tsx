@@ -146,11 +146,19 @@ export default function SandboxPage() {
 
   const renderMobileContent = () => {
     const syncPill = appState === 'error' ? (
-      <button className="syncpill off tap" onClick={() => setAppState('ready')}>
+      <button
+        className="syncpill off tap"
+        onClick={() => setAppState('ready')}
+        aria-label="Synchronization status: offline"
+      >
         <span className="led"></span>{tDash('syncOffline')}
       </button>
     ) : (
-      <button className="syncpill tap" onClick={() => setAppState('error')}>
+      <button
+        className="syncpill tap"
+        onClick={() => setAppState('error')}
+        aria-label="Synchronization status: OK"
+      >
         <span className="led"></span>{tDash('syncOk')}
       </button>
     );
@@ -229,7 +237,11 @@ export default function SandboxPage() {
             <div className="sec">
               <div className="sechd">
                 <h2>{tDash('todayTitle')}</h2>
-                <span className="more" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                <span
+                  className="more"
+                  style={{ color: 'var(--primary)', fontWeight: 700 }}
+                  aria-label={`${data.actions.length} next best actions pending`}
+                >
                   {tDash('todayActions', { count: data.actions.length })}
                 </span>
               </div>
@@ -268,11 +280,19 @@ export default function SandboxPage() {
 
   const renderDesktopContent = () => {
     const syncPill = appState === 'error' ? (
-      <button className="syncpill off tap" onClick={() => setAppState('ready')}>
+      <button
+        className="syncpill off tap"
+        onClick={() => setAppState('ready')}
+        aria-label="Synchronization status: offline"
+      >
         <span className="led"></span>{tDash('syncOfflineCache')}
       </button>
     ) : (
-      <button className="syncpill tap" onClick={() => setAppState('error')}>
+      <button
+        className="syncpill tap"
+        onClick={() => setAppState('error')}
+        aria-label="Synchronization status: OK"
+      >
         <span className="led"></span>{tDash('syncOk')}
       </button>
     );

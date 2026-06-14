@@ -137,8 +137,8 @@ body {
 }
 
 /* Avatar stack */
-.stack { display: flex; }
-.stack > * { margin-left: -9px; border: 2px solid var(--card); }
+.stack { display: flex; flex-shrink: 0; max-width: 100%; }
+.stack > * { margin-left: -9px; border: 2px solid var(--card); flex: none; }
 .stack > *:first-child { margin-left: 0; }
 
 .avatar {

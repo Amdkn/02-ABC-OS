@@ -11,7 +11,7 @@ interface SpotlightProps {
 }
 
 export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
-  const t = useTranslations('hubs.build');
+  const t = useTranslations('dashboard.spotlight');
   return (
     <Link href="/build-hub" className="spot tap" style={{ display: 'block', textDecoration: 'none' }}>
       <div className="ph">
@@ -25,7 +25,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: '14px', marginRight: '4px' }}>star</span>
-          {project.tag}
+          {t(project.tagKey)}
         </div>
         <button
           className="like pill"
@@ -56,7 +56,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ project }) => {
                 color: 'rgba(251,243,228,.72)',
               }}
             >
-              <span>{t('milestonesProgress')}</span>
+              <span>{t('milestone_progress')}</span>
               <b style={{ color: '#fff' }}>
                 {project.ms} / {project.msTotal}
               </b>

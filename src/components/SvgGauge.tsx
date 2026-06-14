@@ -21,7 +21,14 @@ export const SvgGauge: React.FC<SvgGaugeProps> = ({ score, size = 86, stroke = 9
 
   return (
     <div className="gauge" style={{ width: `${size}px`, height: `${size}px` }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: `rotate(${rot}deg)` }}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: `rotate(${rot}deg)` }}
+        role="img"
+        aria-label={`Brand Impact chart: ${score} out of 100`}
+      >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="var(--brand-teal)" />
