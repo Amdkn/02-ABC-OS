@@ -112,8 +112,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
           </div>
         </aside>
 
-        {/* MAIN HUB AREA */}
-        <main className="flex-1 pb-32">
+        {/* MAIN HUB AREA — pb-40 (160px) reserves space so content never scrolls under the mobile bottom nav (D2 fix2 2026-06-14) */}
+        <main className="flex-1 pb-40 md:pb-32" style={{ paddingBottom: 'max(160px, calc(80px + env(safe-area-inset-bottom)))' }}>
 
           {/* Header Mobile & Desktop */}
           <div className="appbar flex items-center p-[10px_18px_6px] md:p-6 md:pb-3 border-b md:border-b-0 border-[var(--line)] bg-[var(--bg)] md:bg-transparent">
@@ -177,8 +177,8 @@ export const HubLayout: React.FC<HubLayoutProps> = ({
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation — 4 items only (no dark mode toggle on mobile) */}
-      <nav aria-label={tCommon('ariaMainNav')} className="nav md:hidden fixed left-0 right-0 bottom-0 z-[6] bg-[var(--card)]/90 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4 p-[9px_14px_env(safe-area-inset-bottom)]">
+      {/* Mobile Bottom Navigation — 4 items only (no dark mode toggle on mobile). z-50 lifts above any future modal/toast layer (D2 fix2 2026-06-14) */}
+      <nav aria-label={tCommon('ariaMainNav')} className="nav md:hidden fixed left-0 right-0 bottom-0 z-50 bg-[var(--card)]/95 backdrop-blur-md border-t border-[var(--line)] grid grid-cols-4" style={{ padding: '9px 14px env(safe-area-inset-bottom)' }}>
         <Link href="/community" className={`tap flex flex-col items-center gap-[3px] py-[6px] text-[var(--ink-faint)] text-[10.5px] font-semibold ${hubKey === 'community' ? 'on font-bold' : ''}`} style={{ '--c': hubKey === 'community' ? 'var(--primary)' : undefined } as React.CSSProperties}>
           <span className="material-symbols-outlined text-[25px]">groups</span>{tCommon('community')}
         </Link>
